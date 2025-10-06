@@ -1,8 +1,9 @@
 # fmriprep
 This is a pipeline that combines fMRIPrep with SPM25 smoothing for use by the UBC Brain Dynamics Lab.
 
-fMRIPrep: https://fmriprep.org/en/stable/
-Statistical Parametric Mapping (SPM): https://www.fil.ion.ucl.ac.uk/spm/
+fMRIPrep: https://fmriprep.org/en/stable/.
+
+Statistical Parametric Mapping (SPM): https://www.fil.ion.ucl.ac.uk/spm/.
 
 # Steps to Run the Pipeline
 
