@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=fmriprep
-#SBATCH --time=08:00:00
+#SBATCH --time=12:00:00
 #SBATCH --cpus-per-task=20
 #SBATCH --mem-per-cpu=10000
 #SBATCH --account=def-woodward
