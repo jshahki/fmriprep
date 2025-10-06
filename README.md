@@ -11,6 +11,10 @@ Statistical Parametric Mapping (SPM): https://www.fil.ion.ucl.ac.uk/spm/.
 Upon logging in to your Compute Canada cluster, please run the following code on Terminal:
 
 ```sh
+cd /scratch
+
+git clone -b main --single-branch https://github.com/jshahki/fmriprep.git
+
 cd /scratch/$USER/fmriprep
 
 sbatch ./fmriprep_setup.sh
