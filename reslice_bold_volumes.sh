@@ -11,7 +11,7 @@ module load StdEnv/2023 matlab/2024b.1
 
 SPLIT_INPUT_DIR="/scratch/$USER/fmriprep/split_reslice_inputs"
 RESLICE_OUTPUT_DIR="/scratch/$USER/fmriprep/split_reslice_outputs"
-SPM_PATH="/scratch/$USER/fmriprep/tools/spm_25.01.02/spm"
+SPM_PATH="/scratch/$USER/fmriprep/tools/spm-25.01.02"
 REFERENCE_SCAN="/scratch/$USER/fmriprep/tools/3x3x3_reference_scan.hdr"
 PARTICIPANTS="/scratch/$USER/fmriprep/data/participants.tsv"
 
