@@ -1,5 +1,5 @@
 # fmriprep
-This is a pipeline that combines fMRIPrep with SPM25 smoothing for use by the UBC Brain Dynamics Lab.
+This is a pipeline that combines fMRIPrep with SPM25 smoothing for use by the UBC Brain Dynamics Lab. The output of this pipeline can be run through downstream statistical analyses, such as fMRI-CPCA.
 
 fMRIPrep: https://fmriprep.org/en/stable/.
 
