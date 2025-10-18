@@ -131,3 +131,11 @@ echo "Found $N_SUBJECTS subjects. Launching array with $ARRAY_LENGTH jobs."
 
 sbatch --export=KERNEL="8 8 8" --array=0-$((ARRAY_LENGTH - 1)) smoothing_bold_volumes.sh
 ```
+
+## Saving the Smoothed Output
+
+The following command can be run on a new Terminal window to download the smoothed output, which can then be run using downstream analysis pipelines. The path to the download folder on the local desktop can be modified as needed.
+
+'''sh
+rsync -avz --progress username@cedar.computecanada.ca:/scratch/username/fmriprep/smoothed/ ~/Downloads/your/location/here/
+'''
