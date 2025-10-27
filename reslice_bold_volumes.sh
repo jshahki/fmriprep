@@ -2,8 +2,8 @@
 #SBATCH --job-name=reslice_bold
 #SBATCH --account=def-woodward
 #SBATCH --time=01:00:00
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=6000
+#SBATCH --cpus-per-task=12
+#SBATCH --mem=10000
 #SBATCH --output=logs/reslice_%A_%a.out
 #SBATCH --error=logs/reslice_%A_%a.err
 
