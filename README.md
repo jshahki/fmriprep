@@ -27,6 +27,7 @@ After placing your BIDS organized data into the data folder, please run the foll
 
 ```sh
 cd /scratch/$USER/fmriprep
+git pull
 
 # Set how many subjects per array task
 SUB_SIZE=1
@@ -75,6 +76,7 @@ This step is required for inputting the fMRI data into SPM25.
 
 ```sh
 cd /scratch/$USER/fmriprep
+git pull
 
 PARTICIPANTS_FILE="./data/participants.tsv"
 SUB_SIZE=1  # Subjects per job
@@ -96,6 +98,7 @@ This step is required for use of fMRI-CPCA downstream.
 
 ```sh
 cd /scratch/$USER/fmriprep
+git pull
 
 PARTICIPANTS_FILE="./data/participants.tsv"
 SUB_SIZE=1  # Subjects per job
@@ -117,6 +120,7 @@ This step is where SPM25 smoothing is performed on the fMRI data.
 
 ```sh
 cd /scratch/$USER/fmriprep
+git pull
 
 PARTICIPANTS_FILE="./data/participants.tsv"
 SUB_SIZE=1  # Subjects per job
