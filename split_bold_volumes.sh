@@ -23,7 +23,6 @@ fi
 
 in_subj_dir="$FMRIPREP_DIR/$SUBJECT"
 out_subj_dir="$SPLIT_DIR/$SUBJECT"
-mkdir -p "$out_subj_dir"
 
 fmri_file=$(find "$in_subj_dir" -type f -name "*space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz" | head -n 1)
 
@@ -31,6 +30,8 @@ if [ ! -f "$fmri_file" ]; then
     echo "No fMRI file found for $SUBJECT"
     exit 1
 fi
+
+mkdir -p "$out_subj_dir"
 
 echo "Found fMRI file for $SUBJECT: $(basename "$fmri_file")"
 cp "$fmri_file" "$out_subj_dir"
