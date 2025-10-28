@@ -8,6 +8,7 @@
 #SBATCH --error=logs/reslice_%A_%a.err
 
 module load StdEnv/2023 matlab/2024b.1
+export MATLAB_PREFDIR="$SLURM_TMPDIR/matlab_prefs"
 
 SPLIT_INPUT_DIR="/scratch/$USER/fmriprep/split_reslice_inputs"
 RESLICE_OUTPUT_DIR="/scratch/$USER/fmriprep/split_reslice_outputs"
