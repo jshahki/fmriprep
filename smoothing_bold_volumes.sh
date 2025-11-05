@@ -40,8 +40,27 @@ mkdir -p "$OUT_SUBJ_DIR"
 KERNEL="${KERNEL:-8 8 8}"
 echo "Running smoothing on $SUBJECT with kernel: $KERNEL"
 
-# Run MATLAB
-matlab -nodisplay -nosplash -r "addpath('$SPM_DIR'); smoothing_spm_batch('$IN_SUBJ_DIR', '$OUT_SUBJ_DIR', '$SUBJECT', [$KERNEL]); exit"
+# Get list of subdirectories inside the subject directory (excluding . and ..)
+mapfile -t SUBDIRS < <(find "$IN_SUBJ_DIR" -mindepth 1 -maxdepth 1 -type d | sort)
+
+if [ ${#SUBDIRS[@]} -eq 0 ]; then
+  # Case 1: No subfolders — process files directly
+  echo "No subfolders found in $IN_SUBJ_DIR. Processing directly..."
+  matlab -nodisplay -nosplash -r "addpath('$SPM_DIR'); smoothing_spm_batch('$IN_SUBJ_DIR', '$OUT_SUBJ_DIR', '$SUBJECT', [$KERNEL]); exit"
+
+else
+  # Case 2: Subfolders exist — process each subfolder individually
+  echo "Found ${#SUBDIRS[@]} subfolders in $IN_SUBJ_DIR."
+  for SUBDIR in "${SUBDIRS[@]}"; do
+    SUBNAME=$(basename "$SUBDIR")
+    IN_RUN_DIR="$SUBDIR"
+    OUT_RUN_DIR="$OUT_SUBJ_DIR/$SUBNAME"
+    mkdir -p "$OUT_RUN_DIR"
+
+    echo "Processing $SUBNAME for $SUBJECT..."
+    matlab -nodisplay -nosplash -r "addpath('$SPM_DIR'); smoothing_spm_batch('$IN_RUN_DIR', '$OUT_RUN_DIR', '${SUBJECT}_${SUBNAME}', [$KERNEL]); exit"
+  done
+fi
 
 # Create status file
 EXIT_CODE=$?
