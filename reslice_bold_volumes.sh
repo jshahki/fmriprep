@@ -3,7 +3,7 @@
 #SBATCH --account=def-woodward
 #SBATCH --time=02:00:00
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=30000
+#SBATCH --mem-per-cpu=30000
 #SBATCH --output=logs/reslice_%A_%a.out
 #SBATCH --error=logs/reslice_%A_%a.err
 
