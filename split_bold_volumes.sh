@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=split_bold
 #SBATCH --account=def-woodward
-#SBATCH --time=01:00:00
+#SBATCH --time=02:00:00
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=30000
 #SBATCH --output=logs/split_%A_%a.out
