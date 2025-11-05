@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=smoothing
 #SBATCH --time=02:00:00
-#SBATCH --cpus-per-task=12
-#SBATCH --mem=10000
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=30000
 #SBATCH --account=def-woodward
 #SBATCH --output=logs/smoothing_%A_%a.out
 #SBATCH --error=logs/smoothing_%A_%a.err
