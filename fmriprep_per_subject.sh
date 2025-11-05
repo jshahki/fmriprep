@@ -47,9 +47,9 @@ apptainer run --cleanenv \
   --fs-subjects-dir /work/freesurfer_subjects_${SUBJECT} \
   --skip-bids-validation \
   --output-spaces MNI152NLin2009cAsym T1w \
-  --nthreads 8 \
-  --omp-nthreads 8 \
-  --mem_mb 32000 \
+  --nthreads 20 \
+  --omp-nthreads 10 \
+  --mem_mb 200000 \
   --work-dir /work
 
 STATUS_DIR="$REPO_DIR/logs/status"
