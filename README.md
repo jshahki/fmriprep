@@ -13,7 +13,7 @@ Upon logging in to your Compute Canada cluster, please run the following code on
 ```sh
 cd /scratch/$USER
 
-git clone -b main --single-branch https://github.com/jshahki/fmriprep.git
+git clone -b Version_2.0 --single-branch https://github.com/jshahki/fmriprep.git
 
 cd /scratch/$USER/fmriprep
 
