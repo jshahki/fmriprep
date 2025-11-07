@@ -35,6 +35,10 @@ mkdir -p "$APPTAINER_CACHEDIR"
 mkdir -p "$REPO_DIR"/{data,derivatives,work,logs,tools}
 mkdir -p "$STATUS_DIR"
 
+# Set number of threads for threaded tools
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+export APPTAINER_MAX_THREADS=$SLURM_CPUS_PER_TASK
+
 # ----------- Setup fMRIPrep -----------
 
 FMRIPREP_STATUS="SKIPPED"
