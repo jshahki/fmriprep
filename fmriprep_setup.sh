@@ -2,7 +2,7 @@
 
 #SBATCH --job-name=fmriprep_setup
 #SBATCH --time=02:00:00
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task=4
 #SBATCH --mem-per-cpu=10000
 #SBATCH --account=def-woodward
 #SBATCH --output=logs/fmriprep_setup_%A_%a.out
