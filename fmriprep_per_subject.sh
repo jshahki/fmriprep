@@ -50,7 +50,8 @@ apptainer run --cleanenv \
   --nthreads 20 \
   --omp-nthreads 10 \
   --mem_mb 200000 \
-  --work-dir /work
+  --work-dir /work \
+  --fs-no-reconall
 
 STATUS_DIR="$REPO_DIR/logs/status"
 mkdir -p "$STATUS_DIR"
