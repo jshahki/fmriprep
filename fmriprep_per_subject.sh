@@ -80,10 +80,12 @@ sleep 1
 # Inspect logs for known failure messages
 if grep -q "Exception: No T1w images found for participant .*\. All workflows require T1w images\." "$LOG_ERR" 2>/dev/null; then
     FAIL_REASON="FAILED_NO_T1W"
-elif grep -q "NoBOLD" "$LOG_ERR" 2>/dev/null; then
+elif grep -q "RuntimeError: No BOLD images found for participant .* and task .*\. All workflows require BOLD images\." "$LOG_ERR" 2>/dev/null; then
     FAIL_REASON="FAILED_NO_BOLD_SCANS"
-elif grep -qi "MissingJSON" "$LOG_ERR" 2>/dev/null; then
+elif grep -q "MissingJSON" "$LOG_ERR" 2>/dev/null; then
     FAIL_REASON="FAILED_MISSING_JSON_INFO"
+elif grep -q "OSError: [Errno 116] Stale file handle" "$LOG_ERR" 2>/dev/null; then
+    FAIL_REASON="FAILED_TECHNICAL"
 elif [ $EXIT_CODE -ne 0 ]; then
     FAIL_REASON="FAILED_EXITCODE_${EXIT_CODE}"
 elif [ -d "$ANAT_DIR" ] && ls "$ANAT_DIR"/*desc-preproc_T1w.nii.gz >/dev/null 2>&1; then
