@@ -2,8 +2,8 @@
 
 #SBATCH --job-name=fmriprep_setup
 #SBATCH --time=02:00:00
-#SBATCH --cpus-per-task=10
-#SBATCH --mem-per-cpu=6000
+#SBATCH --cpus-per-task=4
+#SBATCH --mem-per-cpu=10000
 #SBATCH --account=def-woodward
 #SBATCH --output=logs/fmriprep_setup_%A_%a.out
 #SBATCH --error=logs/fmriprep_setup_%A_%a.err
@@ -34,6 +34,10 @@ export APPTAINER_CACHEDIR="$REPO_DIR/apptainer_cache"
 mkdir -p "$APPTAINER_CACHEDIR"
 mkdir -p "$REPO_DIR"/{data,derivatives,work,logs,tools}
 mkdir -p "$STATUS_DIR"
+
+# Set number of threads for threaded tools
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+export APPTAINER_MAX_THREADS=$SLURM_CPUS_PER_TASK
 
 # ----------- Setup fMRIPrep -----------
 

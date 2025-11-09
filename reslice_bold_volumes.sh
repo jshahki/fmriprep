@@ -1,20 +1,21 @@
 #!/bin/bash
 #SBATCH --job-name=reslice_bold
 #SBATCH --account=def-woodward
-#SBATCH --time=01:00:00
-#SBATCH --cpus-per-task=12
-#SBATCH --mem=10000
+#SBATCH --time=02:00:00
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=30000
 #SBATCH --output=logs/reslice_%A_%a.out
 #SBATCH --error=logs/reslice_%A_%a.err
 
 module load StdEnv/2023 matlab/2024b.1
 export MATLAB_PREFDIR="$SLURM_TMPDIR/matlab_prefs"
 
-SPLIT_INPUT_DIR="/scratch/$USER/fmriprep/split_reslice_inputs"
-RESLICE_OUTPUT_DIR="/scratch/$USER/fmriprep/split_reslice_outputs"
-SPM_PATH="/scratch/$USER/fmriprep/tools/spm-25.01.02"
-REFERENCE_SCAN="/scratch/$USER/fmriprep/tools/3x3x3_reference_scan.hdr"
-PARTICIPANTS="/scratch/$USER/fmriprep/data/participants.tsv"
+REPO_DIR="/scratch/$USER/fmriprep"
+SPLIT_INPUT_DIR="$REPO_DIR/split_reslice_inputs"
+RESLICE_OUTPUT_DIR="$REPO_DIR/split_reslice_outputs"
+SPM_PATH="$REPO_DIR/tools/spm-25.01.02"
+REFERENCE_SCAN="$REPO_DIR/tools/3x3x3_reference_scan.hdr"
+PARTICIPANTS="$REPO_DIR/data/participants.tsv"
 
 mapfile -t SUBJECTS < <(tail -n +2 "$PARTICIPANTS" | cut -f1 | sed 's/\r//')
 SUBJECT="${SUBJECTS[$SLURM_ARRAY_TASK_ID]}"
@@ -24,11 +25,38 @@ if [ -z "$SUBJECT" ]; then
     exit 1
 fi
 
-matlab -nodisplay -r "addpath('$SPM_PATH'); spm('Defaults','fMRI'); spm_jobman('initcfg'); subj_dir = fullfile('$SPLIT_INPUT_DIR', '$SUBJECT'); out_dir = fullfile('$RESLICE_OUTPUT_DIR', '$SUBJECT'); ref = '$REFERENCE_SCAN'; mkdir(out_dir); files = dir(fullfile(subj_dir, '*bold_*.nii')); for i = 1:length(files); src = fullfile(subj_dir, files(i).name); spm_reslice({ref, src}, struct('which',1,'interp',4,'wrap',[0 0 0],'mask',0,'mean',0)); movefile(fullfile(subj_dir, ['r' files(i).name]), fullfile(out_dir, ['r_' files(i).name])); end; exit;"
+SUBJ_INPUT_DIR="$SPLIT_INPUT_DIR/$SUBJECT"
+SUBJ_OUTPUT_DIR="$RESLICE_OUTPUT_DIR/$SUBJECT"
 
-STATUS_FILE="/scratch/$USER/fmriprep/logs/status/${SUBJECT}_reslice_SUCCESS.txt"
+mkdir -p "$SUBJ_OUTPUT_DIR"
+
+# --- Detect whether input contains subfolders ---
+SUBDIRS=($(find "$SUBJ_INPUT_DIR" -mindepth 1 -maxdepth 1 -type d))
+
+if [ ${#SUBDIRS[@]} -eq 0 ]; then
+    echo "[$SUBJECT] No subdirectories detected — processing .nii files directly in subject folder."
+
+    matlab -nodisplay -r "addpath('$SPM_PATH'); spm('Defaults','fMRI'); spm_jobman('initcfg'); subj_dir = '$SUBJ_INPUT_DIR'; out_dir = '$SUBJ_OUTPUT_DIR'; ref = '$REFERENCE_SCAN'; mkdir(out_dir); files = dir(fullfile(subj_dir, '*bold_*.nii')); for i = 1:length(files); src = fullfile(subj_dir, files(i).name); spm_reslice({ref, src}, struct('which',1,'interp',4,'wrap',[0 0 0],'mask',0,'mean',0)); movefile(fullfile(subj_dir, ['r' files(i).name]), fullfile(out_dir, ['r_' files(i).name])); end; exit;"
+
+else
+    echo "[$SUBJECT] Subdirectories detected — processing each session folder separately."
+
+    for SUBDIR in "${SUBDIRS[@]}"; do
+        SUBDIR_NAME=$(basename "$SUBDIR")
+        OUT_SUBDIR="$SUBJ_OUTPUT_DIR/$SUBDIR_NAME"
+        mkdir -p "$OUT_SUBDIR"
+
+        echo "Processing $SUBDIR_NAME ..."
+        matlab -nodisplay -r "addpath('$SPM_PATH'); spm('Defaults','fMRI'); spm_jobman('initcfg'); subj_dir = '$SUBDIR'; out_dir = '$OUT_SUBDIR'; ref = '$REFERENCE_SCAN'; mkdir(out_dir); files = dir(fullfile(subj_dir, '*bold_*.nii')); for i = 1:length(files); src = fullfile(subj_dir, files(i).name); spm_reslice({ref, src}, struct('which',1,'interp',4,'wrap',[0 0 0],'mask',0,'mean',0)); movefile(fullfile(subj_dir, ['r' files(i).name]), fullfile(out_dir, ['r_' files(i).name])); end; exit;"
+    done
+fi
+
+# --- Write success log ---
+STATUS_FILE="$REPO_DIR/logs/status/${SUBJECT}_reslice_SUCCESS.txt"
 mkdir -p "$(dirname "$STATUS_FILE")"
-echo "Subject: $SUBJECT" > "$STATUS_FILE"
-echo "Job ID: $SLURM_JOB_ID" >> "$STATUS_FILE"
-echo "Completed: $(date)" >> "$STATUS_FILE"
+{
+    echo "Subject: $SUBJECT"
+    echo "Job ID: $SLURM_JOB_ID"
+    echo "Completed: $(date)"
+} > "$STATUS_FILE"
 
