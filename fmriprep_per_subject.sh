@@ -53,17 +53,60 @@ apptainer run --cleanenv \
   --work-dir /work \
   --fs-no-reconall
 
+EXIT_CODE=$?
+
+# --- Post-run validation ---
+STATUS="FAILED"
+FAIL_REASON=""
+
+ANAT_DIR="$OUTPUT_DIR/fmriprep/${SUBJECT}/anat"
+FUNC_DIR="$OUTPUT_DIR/fmriprep/${SUBJECT}/func"
+
+# Paths to log files
+LOG_ERR="$REPO_DIR/logs/fmriprep_${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.err"
+LOG_OUT="$REPO_DIR/logs/fmriprep_${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.out"
+
+# Print full paths for troubleshooting
+echo "---------- LOG FILES ----------"
+echo "stderr file: $LOG_ERR"
+echo "stdout file: $LOG_OUT"
+echo "-------------------------------"
+
+while [ ! -s "$LOG_ERR" ]; do
+    sleep 1
+done
+sleep 1
+
+# Inspect logs for known failure messages
+if grep -q "Exception: No T1w images found for participant .*\. All workflows require T1w images\." "$LOG_ERR" 2>/dev/null; then
+    FAIL_REASON="FAILED_NO_T1W"
+elif grep -q "RuntimeError: No BOLD images found for participant .* and task .*\. All workflows require BOLD images\." "$LOG_ERR" 2>/dev/null; then
+    FAIL_REASON="FAILED_NO_BOLD_SCANS"
+elif grep -q "MissingJSON" "$LOG_ERR" 2>/dev/null; then
+    FAIL_REASON="FAILED_MISSING_JSON_INFO"
+elif grep -q "OSError: [Errno 116] Stale file handle" "$LOG_ERR" 2>/dev/null; then
+    FAIL_REASON="FAILED_TECHNICAL"
+elif [ $EXIT_CODE -ne 0 ]; then
+    FAIL_REASON="FAILED_EXITCODE_${EXIT_CODE}"
+elif [ -d "$ANAT_DIR" ] && ls "$ANAT_DIR"/*desc-preproc_T1w.nii.gz >/dev/null 2>&1; then
+    STATUS="SUCCESS"
+else
+    FAIL_REASON="FAILED_OUTPUT_MISSING"
+fi
+
+# Additional safeguard: downgrade SUCCESS if outputs missing
+if [ "$STATUS" == "SUCCESS" ] && [ -z "$(ls "$ANAT_DIR"/*desc-preproc_T1w.nii* 2>/dev/null)" ]; then
+  STATUS="FAILED_NO_T1W"
+fi
+
 STATUS_DIR="$REPO_DIR/logs/status"
 mkdir -p "$STATUS_DIR"
 
-EXIT_CODE=$?
-if [ $EXIT_CODE -eq 0 ]; then
-  STATUS="SUCCESS"
+if [ "$STATUS" = "SUCCESS" ]; then
+  STATUS_FILE="$STATUS_DIR/${SUBJECT}_fmriprep_SUCCESS.txt"
 else
-  STATUS="FAILED"
+  STATUS_FILE="$STATUS_DIR/${SUBJECT}_fmriprep_${FAIL_REASON:-FAILED}.txt"
 fi
-
-STATUS_FILE="$STATUS_DIR/${SUBJECT}_${STATUS}.txt"
 
 {
   echo "Status: $STATUS"
@@ -72,4 +115,3 @@ STATUS_FILE="$STATUS_DIR/${SUBJECT}_${STATUS}.txt"
   echo "Job ID: $SLURM_JOB_ID"
   echo "Finished: $(date)"
 } > "$STATUS_FILE"
-
