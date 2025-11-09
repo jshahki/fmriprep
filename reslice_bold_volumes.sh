@@ -14,7 +14,7 @@ REPO_DIR="/scratch/$USER/fmriprep"
 SPLIT_INPUT_DIR="$REPO_DIR/split_reslice_inputs"
 RESLICE_OUTPUT_DIR="$REPO_DIR/split_reslice_outputs"
 SPM_PATH="$REPO_DIR/tools/spm-25.01.02"
-REFERENCE_SCAN="$REPO_DIR/tools/3x3x3_reference_scan.hdr"
+REFERENCE_SCAN="$REPO_DIR/tools/3x3x3_reference_scan.nii"
 PARTICIPANTS="$REPO_DIR/data/participants.tsv"
 
 mapfile -t SUBJECTS < <(tail -n +2 "$PARTICIPANTS" | cut -f1 | sed 's/\r//')
