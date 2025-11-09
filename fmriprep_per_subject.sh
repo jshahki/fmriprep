@@ -13,7 +13,7 @@ module load apptainer
 REPO_DIR="/scratch/$USER/fmriprep"
 BIDS_DIR="$REPO_DIR/data"
 OUTPUT_DIR="$REPO_DIR/derivatives"
-WORK_DIR="$REPO_DIR/work"
+WORK_DIR="$SLURM_TMPDIR/work"
 FS_LICENSE="$REPO_DIR/freesurfer/license.txt"
 SUBJECTS_FILE="$BIDS_DIR/participants.tsv"
 FMRIPREP_IMAGE="$REPO_DIR/fmriprep-20.2.7.sif"
