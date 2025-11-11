@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=fmriprep
-#SBATCH --time=12:00:00
+#SBATCH --time=10:00:00
 #SBATCH --cpus-per-task=20
 #SBATCH --mem-per-cpu=10000
 #SBATCH --account=def-woodward
@@ -84,7 +84,7 @@ elif grep -q "RuntimeError: No BOLD images found for participant .* and task .*\
     FAIL_REASON="FAILED_NO_BOLD_SCANS"
 elif grep -q "MissingJSON" "$LOG_ERR" 2>/dev/null; then
     FAIL_REASON="FAILED_MISSING_JSON_INFO"
-elif grep -q "OSError: [Errno 116] Stale file handle" "$LOG_ERR" 2>/dev/null; then
+elif grep -q "OSError: \[Errno 116\] Stale file handle" "$LOG_ERR" 2>/dev/null; then
     FAIL_REASON="FAILED_TECHNICAL"
 elif [ $EXIT_CODE -ne 0 ]; then
     FAIL_REASON="FAILED_EXITCODE_${EXIT_CODE}"
