@@ -82,8 +82,6 @@ if grep -q "Exception: No T1w images found for participant .*\. All workflows re
     FAIL_REASON="FAILED_NO_T1W"
 elif grep -q "RuntimeError: No BOLD images found for participant .* and task .*\. All workflows require BOLD images\." "$LOG_ERR" 2>/dev/null; then
     FAIL_REASON="FAILED_NO_BOLD_SCANS"
-elif grep -q "MissingJSON" "$LOG_ERR" 2>/dev/null; then
-    FAIL_REASON="FAILED_MISSING_JSON_INFO"
 elif grep -q "KeyError: \"Metadata term 'RepetitionTime' unavailable for file" "$LOG_ERR" 2>/dev/null; then
     FAIL_REASON="FAILED_NEED_JSON_REPETITION_TIME"
 elif [ $EXIT_CODE -ne 0 ]; then
