@@ -86,6 +86,8 @@ elif grep -q "MissingJSON" "$LOG_ERR" 2>/dev/null; then
     FAIL_REASON="FAILED_MISSING_JSON_INFO"
 elif grep -q "OSError: \[Errno 116\] Stale file handle" "$LOG_ERR" 2>/dev/null; then
     FAIL_REASON="FAILED_TECHNICAL"
+elif grep -q "KeyError: \"Metadata term 'RepetitionTime' unavailable for file" "$LOG_ERR" 2>/dev/null; then
+    FAIL_REASON="FAILED_NEED_JSON_REPETITION_TIME"
 elif [ $EXIT_CODE -ne 0 ]; then
     FAIL_REASON="FAILED_EXITCODE_${EXIT_CODE}"
 elif [ -d "$ANAT_DIR" ] && ls "$ANAT_DIR"/*desc-preproc_T1w.nii.gz >/dev/null 2>&1; then
