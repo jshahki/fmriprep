@@ -83,7 +83,7 @@ if grep -q "Exception: No T1w images found for participant .*\. All workflows re
 elif grep -q "RuntimeError: No BOLD images found for participant .* and task .*\. All workflows require BOLD images\." "$LOG_ERR" 2>/dev/null; then
     FAIL_REASON="FAILED_NO_BOLD_SCANS"
 elif grep -q "KeyError: \"Metadata term 'RepetitionTime' unavailable for file" "$LOG_ERR" 2>/dev/null; then
-    FAIL_REASON="FAILED_NEED_JSON_REPETITION_TIME"
+    FAIL_REASON="FAILED_NEED_JSON_BOLD_REPETITION_TIME"
 elif [ $EXIT_CODE -ne 0 ]; then
     FAIL_REASON="FAILED_EXITCODE_${EXIT_CODE}"
 elif [ -d "$ANAT_DIR" ] && ls "$ANAT_DIR"/*desc-preproc_T1w.nii.gz >/dev/null 2>&1; then
