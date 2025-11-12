@@ -84,8 +84,6 @@ elif grep -q "RuntimeError: No BOLD images found for participant .* and task .*\
     FAIL_REASON="FAILED_NO_BOLD_SCANS"
 elif grep -q "MissingJSON" "$LOG_ERR" 2>/dev/null; then
     FAIL_REASON="FAILED_MISSING_JSON_INFO"
-elif grep -q "OSError: \[Errno 116\] Stale file handle" "$LOG_ERR" 2>/dev/null; then
-    FAIL_REASON="FAILED_TECHNICAL"
 elif grep -q "KeyError: \"Metadata term 'RepetitionTime' unavailable for file" "$LOG_ERR" 2>/dev/null; then
     FAIL_REASON="FAILED_NEED_JSON_REPETITION_TIME"
 elif [ $EXIT_CODE -ne 0 ]; then
