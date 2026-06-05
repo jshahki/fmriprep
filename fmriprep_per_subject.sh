@@ -39,11 +39,18 @@ export APPTAINERENV_FS_LICENSE=/fs/license.txt
 
 CACHE_DIR="$REPO_DIR/cache"
 
-mkdir -p "$CACHE_DIR/template_flow"
+mkdir -p "$CACHE_DIR/templateflow"
 mkdir -p "$CACHE_DIR/apptainer"
 
 export XDG_CACHE_HOME="$CACHE_DIR"
+
+# IMPORTANT: pass TemplateFlow cache INTO container (required because --cleanenv is used)
 export TEMPLATEFLOW_HOME="$CACHE_DIR/templateflow"
+export APPTAINERENV_TEMPLATEFLOW_HOME="$CACHE_DIR/templateflow"
+
+# Also ensure XDG cache propagates inside container
+export APPTAINERENV_XDG_CACHE_HOME="$CACHE_DIR"
+
 export APPTAINER_CACHEDIR="$CACHE_DIR/apptainer"
 
 apptainer run --cleanenv \
