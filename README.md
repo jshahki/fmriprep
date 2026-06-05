@@ -11,11 +11,15 @@ Statistical Parametric Mapping (SPM): https://www.fil.ion.ucl.ac.uk/spm/.
 Upon logging in to your Compute Canada cluster, please run the following code on Terminal:
 
 ```sh
-cd /scratch/$USER
+SCRATCH_DIR="/scratch/st-toddwood-1/$USER"
 
-git clone -b Version_2.0 --single-branch https://github.com/jshahki/fmriprep.git
+mkdir -p "$SCRATCH_DIR"
 
-cd /scratch/$USER/fmriprep
+cd "$SCRATCH_DIR"
+
+git clone -b Sockeye_Version_2.0 --single-branch https://github.com/jshahki/fmriprep.git
+
+cd "SCRATCH_DIR"
 
 sbatch ./fmriprep_setup.sh
 ```
@@ -26,7 +30,7 @@ This will set up the environment for running both fMRIPrep and SPM25 smoothing.
 After placing your BIDS organized data into the data folder, please run the following code on Terminal:
 
 ```sh
-cd /scratch/$USER/fmriprep
+cd /scratch/st-toddwood-1/$USER/fmriprep
 git pull
 
 # Set how many subjects per array task
@@ -75,7 +79,7 @@ sbatch --array=0-$((array_job_length - 1)) ./fmriprep_per_subject.sh
 This step is required for inputting the fMRI data into SPM25.
 
 ```sh
-cd /scratch/$USER/fmriprep
+cd /scratch/st-toddwood-1/$USER/fmriprep
 git pull
 
 PARTICIPANTS_FILE="./data/participants.tsv"
@@ -97,7 +101,7 @@ sbatch --array=0-$((ARRAY_LENGTH - 1)) split_bold_volumes.sh
 This step is required for use of fMRI-CPCA downstream.
 
 ```sh
-cd /scratch/$USER/fmriprep
+cd /scratch/st-toddwood-1/$USER/fmriprep
 git pull
 
 PARTICIPANTS_FILE="./data/participants.tsv"
@@ -119,7 +123,7 @@ sbatch --array=0-$((ARRAY_LENGTH - 1)) reslice_bold_volumes.sh
 This step is where SPM25 smoothing is performed on the fMRI data.
 
 ```sh
-cd /scratch/$USER/fmriprep
+cd /scratch/st-toddwood-1/$USER/fmriprep
 git pull
 
 PARTICIPANTS_FILE="./data/participants.tsv"
