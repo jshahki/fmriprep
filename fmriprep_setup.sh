@@ -16,8 +16,9 @@ SPM_URL="https://github.com/spm/spm/archive/refs/tags/25.01.02.zip"
 
 LOG_DIR="$REPO_DIR/logs"
 STATUS_DIR="$LOG_DIR/status"
+DERIVATIVES_DIR="$REPO_DIR/derivatives"
 
-mkdir -p "$LOG_DIR" "$STATUS_DIR" "$REPO_DIR/tools"
+mkdir -p "$LOG_DIR" "$STATUS_DIR" "$REPO_DIR/tools" "$DERIVATIVES_DIR"
 
 LOG_FILE="$LOG_DIR/setup_login_$(date +%Y%m%d_%H%M%S).log"
 
