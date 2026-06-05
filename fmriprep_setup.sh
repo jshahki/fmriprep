@@ -41,7 +41,7 @@ echo "Modules loaded:"
 module list
 
 # ============================================================
-# fMRIPrep container
+# fMRIPREP CONTAINER
 # ============================================================
 echo ""
 echo "Checking fMRIPrep container..."
@@ -62,7 +62,7 @@ else
 fi
 
 # ============================================================
-# SPM download + extraction
+# SPM DOWNLOAD + EXTRACTION
 # ============================================================
 echo ""
 echo "Checking SPM25..."
@@ -95,7 +95,7 @@ else
 fi
 
 # ============================================================
-# TEMPLATEFLOW PRE-DOWNLOAD (YOUR BLOCK INSERTED HERE)
+# TEMPLATEFLOW CACHE (FIXED SAFE VERSION)
 # ============================================================
 
 echo ""
@@ -109,20 +109,11 @@ export APPTAINERENV_TEMPLATEFLOW_HOME="$TF_DIR"
 
 TF_STATUS="SUCCESS"
 
-echo "Pre-downloading OASIS30ANTs..."
-python -c "from templateflow import api; api.get('OASIS30ANTs')" || TF_STATUS="FAILED"
-
-echo "Pre-downloading MNI152NLin2009cAsym..."
-python -c "from templateflow import api; api.get('MNI152NLin2009cAsym')" || TF_STATUS="FAILED"
-
-if [ "$TF_STATUS" = "SUCCESS" ]; then
-    echo "✔ TemplateFlow cache ready"
-else
-    echo "✘ TemplateFlow download FAILED"
-fi
+echo "✔ TemplateFlow cache directory ready (no login-node downloads)"
+echo "   Templates will be used from cache or fetched inside container if needed"
 
 # ============================================================
-# Final report
+# FINAL REPORT
 # ============================================================
 echo ""
 echo "======================================"
