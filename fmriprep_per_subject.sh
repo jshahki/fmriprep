@@ -2,8 +2,8 @@
 #SBATCH --job-name=fmriprep
 #SBATCH --time=10:00:00
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=20
-#SBATCH --mem-per-cpu=10000
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=128G
 #SBATCH --account=st-toddwood-1
 #SBATCH --output=logs/fmriprep_%A_%a.out
 #SBATCH --error=logs/fmriprep_%A_%a.err
@@ -49,9 +49,9 @@ apptainer run --cleanenv \
   --fs-subjects-dir /work/freesurfer_subjects_${SUBJECT} \
   --skip-bids-validation \
   --output-spaces MNI152NLin2009cAsym T1w \
-  --nthreads 20 \
-  --omp-nthreads 10 \
-  --mem_mb 200000 \
+  --nthreads 16 \
+  --omp-nthreads 8 \
+  --mem_mb 128000 \
   --work-dir /work \
   --fs-no-reconall
 
