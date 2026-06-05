@@ -95,7 +95,7 @@ else
 fi
 
 # ============================================================
-# TEMPLATEFLOW PRE-DOWNLOAD
+# TEMPLATEFLOW PRE-DOWNLOAD (FIXED)
 # ============================================================
 echo ""
 echo "Checking TemplateFlow cache..."
@@ -107,16 +107,23 @@ export TEMPLATEFLOW_HOME="$TF_DIR"
 
 TF_STATUS="SUCCESS"
 
-# Install templateflow into login environment (only needed once)
+# ----------------------------
+# FIXED INSTALL BLOCK
+# ----------------------------
 echo "Ensuring templateflow Python package is available..."
 
 if python -c "import templateflow" 2>/dev/null; then
     echo "✔ templateflow already installed"
 else
-    echo "Installing templateflow..."
-    pip install --user templateflow || TF_STATUS="FAILED"
+    echo "Installing templateflow via python -m pip..."
+
+    python -m pip install --user --upgrade pip || true
+    python -m pip install --user templateflow || TF_STATUS="FAILED"
 fi
 
+# ----------------------------
+# Pre-download templates
+# ----------------------------
 if [ "$TF_STATUS" = "SUCCESS" ]; then
     echo ""
     echo "Pre-downloading OASIS30ANTs..."
