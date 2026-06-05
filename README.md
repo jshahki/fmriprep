@@ -19,7 +19,7 @@ cd "$SCRATCH_DIR"
 
 git clone -b Sockeye_Version_2.0 --single-branch https://github.com/jshahki/fmriprep.git
 
-cd "SCRATCH_DIR"
+cd /scratch/st-toddwood-1/$USER/fmriprep
 
 sbatch ./fmriprep_setup.sh
 ```
