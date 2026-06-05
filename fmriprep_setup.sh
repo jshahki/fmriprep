@@ -95,8 +95,9 @@ else
 fi
 
 # ============================================================
-# TEMPLATEFLOW PRE-DOWNLOAD (FIXED)
+# TEMPLATEFLOW PRE-DOWNLOAD (YOUR BLOCK INSERTED HERE)
 # ============================================================
+
 echo ""
 echo "Checking TemplateFlow cache..."
 
@@ -104,39 +105,20 @@ TF_DIR="$CACHE_DIR/templateflow"
 mkdir -p "$TF_DIR"
 
 export TEMPLATEFLOW_HOME="$TF_DIR"
+export APPTAINERENV_TEMPLATEFLOW_HOME="$TF_DIR"
 
 TF_STATUS="SUCCESS"
 
-# ----------------------------
-# FIXED INSTALL BLOCK
-# ----------------------------
-echo "Ensuring templateflow Python package is available..."
+echo "Pre-downloading OASIS30ANTs..."
+python -c "from templateflow import api; api.get('OASIS30ANTs')" || TF_STATUS="FAILED"
 
-if python -c "import templateflow" 2>/dev/null; then
-    echo "✔ templateflow already installed"
-else
-    echo "Installing templateflow via python -m pip..."
-
-    python -m pip install --user --upgrade pip || true
-    python -m pip install --user templateflow || TF_STATUS="FAILED"
-fi
-
-# ----------------------------
-# Pre-download templates
-# ----------------------------
-if [ "$TF_STATUS" = "SUCCESS" ]; then
-    echo ""
-    echo "Pre-downloading OASIS30ANTs..."
-    python -c "from templateflow import api; api.get('OASIS30ANTs')" || TF_STATUS="FAILED"
-
-    echo "Pre-downloading MNI152NLin2009cAsym..."
-    python -c "from templateflow import api; api.get('MNI152NLin2009cAsym')" || TF_STATUS="FAILED"
-fi
+echo "Pre-downloading MNI152NLin2009cAsym..."
+python -c "from templateflow import api; api.get('MNI152NLin2009cAsym')" || TF_STATUS="FAILED"
 
 if [ "$TF_STATUS" = "SUCCESS" ]; then
-    echo "✔ TemplateFlow cache ready at $TF_DIR"
+    echo "✔ TemplateFlow cache ready"
 else
-    echo "✘ TemplateFlow setup FAILED"
+    echo "✘ TemplateFlow download FAILED"
 fi
 
 # ============================================================
@@ -147,7 +129,7 @@ echo "======================================"
 echo "FINAL STATUS REPORT"
 echo "======================================"
 
-echo "fMRIPrep: $FMRIPREP_STATUS"
+echo "fMRIPREP: $FMRIPREP_STATUS"
 echo "SPM25:    $SPM_STATUS"
 echo "TemplateFlow: $TF_STATUS"
 
@@ -165,7 +147,7 @@ mkdir -p "$STATUS_DIR"
 
 {
   echo "Final Status: $FINAL_STATUS"
-  echo "fMRIPrep: $FMRIPREP_STATUS"
+  echo "fMRIPREP: $FMRIPREP_STATUS"
   echo "SPM25: $SPM_STATUS"
   echo "TemplateFlow: $TF_STATUS"
   echo "User: $USER"
