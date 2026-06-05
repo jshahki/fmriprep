@@ -23,7 +23,6 @@ mkdir -p "$LOG_DIR" "$STATUS_DIR" "$REPO_DIR/tools" "$DERIVATIVES_DIR" "$CACHE_D
 
 LOG_FILE="$LOG_DIR/setup_login_$(date +%Y%m%d_%H%M%S).log"
 
-# Redirect ALL output to log while still showing in terminal
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 echo "======================================"
@@ -33,9 +32,6 @@ echo "Host: $(hostname)"
 echo "Start: $(date)"
 echo "======================================"
 
-# ----------------------------
-# Load modules (login node only)
-# ----------------------------
 module purge
 module load gcc/9.4.0
 module load apptainer/1.3.1
@@ -44,9 +40,9 @@ echo ""
 echo "Modules loaded:"
 module list
 
-# ----------------------------
+# ============================================================
 # fMRIPrep container
-# ----------------------------
+# ============================================================
 echo ""
 echo "Checking fMRIPrep container..."
 
@@ -65,9 +61,9 @@ else
     fi
 fi
 
-# ----------------------------
+# ============================================================
 # SPM download + extraction
-# ----------------------------
+# ============================================================
 echo ""
 echo "Checking SPM25..."
 
@@ -98,9 +94,47 @@ else
     fi
 fi
 
-# ----------------------------
+# ============================================================
+# TEMPLATEFLOW PRE-DOWNLOAD
+# ============================================================
+echo ""
+echo "Checking TemplateFlow cache..."
+
+TF_DIR="$CACHE_DIR/templateflow"
+mkdir -p "$TF_DIR"
+
+export TEMPLATEFLOW_HOME="$TF_DIR"
+
+TF_STATUS="SUCCESS"
+
+# Install templateflow into login environment (only needed once)
+echo "Ensuring templateflow Python package is available..."
+
+if python -c "import templateflow" 2>/dev/null; then
+    echo "✔ templateflow already installed"
+else
+    echo "Installing templateflow..."
+    pip install --user templateflow || TF_STATUS="FAILED"
+fi
+
+if [ "$TF_STATUS" = "SUCCESS" ]; then
+    echo ""
+    echo "Pre-downloading OASIS30ANTs..."
+    python -c "from templateflow import api; api.get('OASIS30ANTs')" || TF_STATUS="FAILED"
+
+    echo "Pre-downloading MNI152NLin2009cAsym..."
+    python -c "from templateflow import api; api.get('MNI152NLin2009cAsym')" || TF_STATUS="FAILED"
+fi
+
+if [ "$TF_STATUS" = "SUCCESS" ]; then
+    echo "✔ TemplateFlow cache ready at $TF_DIR"
+else
+    echo "✘ TemplateFlow setup FAILED"
+fi
+
+# ============================================================
 # Final report
-# ----------------------------
+# ============================================================
 echo ""
 echo "======================================"
 echo "FINAL STATUS REPORT"
@@ -108,8 +142,9 @@ echo "======================================"
 
 echo "fMRIPrep: $FMRIPREP_STATUS"
 echo "SPM25:    $SPM_STATUS"
+echo "TemplateFlow: $TF_STATUS"
 
-if [[ "$FMRIPREP_STATUS" == "FAILED" || "$SPM_STATUS" == "FAILED" ]]; then
+if [[ "$FMRIPREP_STATUS" == "FAILED" || "$SPM_STATUS" == "FAILED" || "$TF_STATUS" == "FAILED" ]]; then
     FINAL_STATUS="FAILED"
 else
     FINAL_STATUS="SUCCESS"
@@ -119,13 +154,13 @@ echo "Overall:  $FINAL_STATUS"
 echo "End:      $(date)"
 echo "Log file: $LOG_FILE"
 
-# Save machine-readable status file
 mkdir -p "$STATUS_DIR"
 
 {
   echo "Final Status: $FINAL_STATUS"
   echo "fMRIPrep: $FMRIPREP_STATUS"
   echo "SPM25: $SPM_STATUS"
+  echo "TemplateFlow: $TF_STATUS"
   echo "User: $USER"
   echo "Host: $(hostname)"
   echo "Date: $(date)"
