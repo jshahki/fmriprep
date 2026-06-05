@@ -9,6 +9,8 @@
 #SBATCH --output=logs/fmriprep_setup_%A_%a.out
 #SBATCH --error=logs/fmriprep_setup_%A_%a.err
 
+set -euo pipefail
+
 # ----------- Basic Environment Setup -----------
 
 # Ensure SLURM output directory exists (relative to submission location)
@@ -27,8 +29,9 @@ SPM_URL="https://github.com/spm/spm/archive/refs/tags/25.01.02.zip"
 STATUS_DIR="$REPO_DIR/logs/status"
 
 # Load required modules
-module load StdEnv/2023
-module load apptainer
+module purge
+module load gcc/9.4.0
+module load apptainer/1.3.1
 
 # Create required directories
 export APPTAINER_CACHEDIR="$REPO_DIR/apptainer_cache"
