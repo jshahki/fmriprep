@@ -1,108 +1,130 @@
 #!/bin/bash
 
-#SBATCH --job-name=fmriprep_setup
-#SBATCH --time=02:00:00
-#SBATCH --nodes=1
-#SBATCH --cpus-per-task=4
-#SBATCH --mem-per-cpu=10000
-#SBATCH --account=st-toddwood-1
-#SBATCH --output=logs/fmriprep_setup_%A_%a.out
-#SBATCH --error=logs/fmriprep_setup_%A_%a.err
-
 set -euo pipefail
 
-# ----------- Basic Environment Setup -----------
+# ----------------------------
+# Paths
+# ----------------------------
+SCRATCH_DIR="/scratch/st-toddwood-1/$USER"
+REPO_DIR="$SCRATCH_DIR/fmriprep"
 
-# Ensure SLURM output directory exists (relative to submission location)
-mkdir -p logs
-
-echo "SLURM job started at $(date)"
-echo "Running on host: $(hostname)"
-echo "User: $USER"
-
-# Define paths
-REPO_DIR="/scratch/st-toddwood-1/$USER/fmriprep"
 FMRIPREP_IMAGE="$REPO_DIR/fmriprep-20.2.7.sif"
-SPM_DIR="$REPO_DIR/tools/spm-25.01.02"  # <- Keep original name
+
+SPM_DIR="$REPO_DIR/tools/spm-25.01.02"
 SPM_ZIP="$REPO_DIR/tools/spm25.zip"
 SPM_URL="https://github.com/spm/spm/archive/refs/tags/25.01.02.zip"
-STATUS_DIR="$REPO_DIR/logs/status"
 
-# Load required modules
+LOG_DIR="$REPO_DIR/logs"
+STATUS_DIR="$LOG_DIR/status"
+
+mkdir -p "$LOG_DIR" "$STATUS_DIR" "$REPO_DIR/tools"
+
+LOG_FILE="$LOG_DIR/setup_login_$(date +%Y%m%d_%H%M%S).log"
+
+# Redirect ALL output to log while still showing in terminal
+exec > >(tee -a "$LOG_FILE") 2>&1
+
+echo "======================================"
+echo "fMRIPrep SETUP (LOGIN NODE)"
+echo "User: $USER"
+echo "Host: $(hostname)"
+echo "Start: $(date)"
+echo "======================================"
+
+# ----------------------------
+# Load modules (login node only)
+# ----------------------------
 module purge
 module load gcc/9.4.0
 module load apptainer/1.3.1
 
-# Create required directories
-export APPTAINER_CACHEDIR="$REPO_DIR/apptainer_cache"
-mkdir -p "$APPTAINER_CACHEDIR"
-mkdir -p "$REPO_DIR"/{data,derivatives,work,logs,tools}
-mkdir -p "$STATUS_DIR"
+echo ""
+echo "Modules loaded:"
+module list
 
-# Set number of threads for threaded tools
-export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
-export APPTAINER_MAX_THREADS=$SLURM_CPUS_PER_TASK
+# ----------------------------
+# fMRIPrep container
+# ----------------------------
+echo ""
+echo "Checking fMRIPrep container..."
 
-# ----------- Setup fMRIPrep -----------
+FMRIPREP_STATUS="SUCCESS"
 
-FMRIPREP_STATUS="SKIPPED"
-if [ ! -f "$FMRIPREP_IMAGE" ]; then
-  echo "fMRIPrep not found. Downloading..."
-  apptainer pull "$FMRIPREP_IMAGE" docker://nipreps/fmriprep:20.2.7
-  if [ $? -eq 0 ]; then
-    FMRIPREP_STATUS="SUCCESS"
-    echo "fMRIPrep setup complete."
-  else
-    FMRIPREP_STATUS="FAILED"
-    echo "fMRIPrep setup FAILED."
-  fi
+if [ -f "$FMRIPREP_IMAGE" ]; then
+    echo "✔ fMRIPrep already exists: $FMRIPREP_IMAGE"
 else
-  echo "fMRIPrep already exists at $FMRIPREP_IMAGE — skipping download."
-fi
+    echo "Downloading fMRIPrep container..."
 
-# ----------- Setup SPM25 (keep folder name) -----------
-
-SPM_STATUS="SKIPPED"
-if [ ! -d "$SPM_DIR" ]; then
-  echo "SPM25 not found. Downloading..."
-  wget -O "$SPM_ZIP" "$SPM_URL"
-  if [ $? -ne 0 ]; then
-    SPM_STATUS="FAILED"
-    echo "SPM25 download failed."
-  else
-    echo "Extracting SPM..."
-    unzip "$SPM_ZIP" -d "$REPO_DIR/tools/"
-    if [ $? -eq 0 ]; then
-      rm -f "$SPM_ZIP"
-      SPM_STATUS="SUCCESS"
-      echo "SPM25 setup complete at $SPM_DIR"
+    if apptainer pull "$FMRIPREP_IMAGE" docker://nipreps/fmriprep:20.2.7; then
+        echo "✔ fMRIPrep download SUCCESS"
     else
-      SPM_STATUS="FAILED"
-      echo "SPM25 extraction failed."
+        echo "✘ fMRIPrep download FAILED"
+        FMRIPREP_STATUS="FAILED"
     fi
-  fi
-else
-  echo "SPM25 already exists at $SPM_DIR — skipping setup."
 fi
 
-# ----------- Status Reporting -----------
+# ----------------------------
+# SPM download + extraction
+# ----------------------------
+echo ""
+echo "Checking SPM25..."
 
-# Determine final status
+SPM_STATUS="SUCCESS"
+
+if [ -d "$SPM_DIR" ]; then
+    echo "✔ SPM already exists: $SPM_DIR"
+else
+    echo "Downloading SPM25..."
+
+    if wget -O "$SPM_ZIP" "$SPM_URL"; then
+        echo "✔ Downloaded SPM zip"
+    else
+        echo "✘ SPM download FAILED"
+        SPM_STATUS="FAILED"
+    fi
+
+    if [ "$SPM_STATUS" = "SUCCESS" ]; then
+        echo "Extracting SPM..."
+
+        if unzip -q "$SPM_ZIP" -d "$REPO_DIR/tools/"; then
+            rm -f "$SPM_ZIP"
+            echo "✔ SPM extraction SUCCESS"
+        else
+            echo "✘ SPM extraction FAILED"
+            SPM_STATUS="FAILED"
+        fi
+    fi
+fi
+
+# ----------------------------
+# Final report
+# ----------------------------
+echo ""
+echo "======================================"
+echo "FINAL STATUS REPORT"
+echo "======================================"
+
+echo "fMRIPrep: $FMRIPREP_STATUS"
+echo "SPM25:    $SPM_STATUS"
+
 if [[ "$FMRIPREP_STATUS" == "FAILED" || "$SPM_STATUS" == "FAILED" ]]; then
-  FINAL_STATUS="FAILED"
+    FINAL_STATUS="FAILED"
 else
-  FINAL_STATUS="SUCCESS"
+    FINAL_STATUS="SUCCESS"
 fi
 
-STATUS_FILE="$STATUS_DIR/setup_${FINAL_STATUS}.txt"
+echo "Overall:  $FINAL_STATUS"
+echo "End:      $(date)"
+echo "Log file: $LOG_FILE"
+
+# Save machine-readable status file
+mkdir -p "$STATUS_DIR"
 
 {
   echo "Final Status: $FINAL_STATUS"
-  echo "fMRIPrep Status: $FMRIPREP_STATUS"
-  echo "SPM25 Status: $SPM_STATUS"
-  echo "Job ID: $SLURM_JOB_ID"
-  echo "Finished: $(date)"
+  echo "fMRIPrep: $FMRIPREP_STATUS"
+  echo "SPM25: $SPM_STATUS"
   echo "User: $USER"
   echo "Host: $(hostname)"
-} > "$STATUS_FILE"
-
+  echo "Date: $(date)"
+} > "$STATUS_DIR/setup_status.txt"
