@@ -26,6 +26,8 @@ source ./fmriprep_setup.sh
 
 This will set up the environment for running both fMRIPrep and SPM25 smoothing.
 
+Please ensure to keep the Terminal window open while this process completes.
+
 ## Running fMRIPrep on your data
 After placing your BIDS organized data into the data folder, please run the following code on Terminal:
 
