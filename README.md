@@ -142,8 +142,14 @@ sbatch --export=KERNEL="8 8 8" --array=0-$((ARRAY_LENGTH - 1)) smoothing_bold_vo
 
 ## Saving the Smoothed Output
 
-The following command can be run on a new Terminal window to download the smoothed output, which can then be run using downstream analysis pipelines. The path to the download folder on the local desktop can be modified as needed.
+The following commands can be run on a new Terminal window to download the smoothed output, which can then be run using downstream analysis pipelines. The path to the download folder on the local desktop can be modified as needed.
 
+For Ubuntu:
 ```sh
-rsync -avz --progress username@cedar.computecanada.ca:/scratch/username/fmriprep/smoothed/ ~/Downloads/your/location/here/
+rsync -avz --progress username@sockeye.arc.ubc.ca:/scratch/st-toddwood-1/username/fmriprep/smoothed/ ~/Downloads/your/location/here/
+```
+
+For Windows:
+```sh
+scp -r -C -v username@sockeye.arc.ubc.ca:/scratch/st-toddwood-1/username/fmriprep/smoothed/ C:\Users\username\Downloads\your\location\here\
 ```
