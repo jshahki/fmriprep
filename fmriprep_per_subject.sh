@@ -8,8 +8,9 @@
 #SBATCH --output=logs/fmriprep_%A_%a.out
 #SBATCH --error=logs/fmriprep_%A_%a.err
 
-module load StdEnv/2023
-module load apptainer
+module purge
+module load gcc/9.4.0
+module load apptainer/1.3.1
 
 REPO_DIR="/scratch/st-toddwood-1/$USER/fmriprep"
 BIDS_DIR="$REPO_DIR/data"
@@ -33,8 +34,8 @@ FS_SUBJECTS_DIR="$WORK_DIR/freesurfer_subjects_${SUBJECT}"
 mkdir -p "$FS_SUBJECTS_DIR"
 
 export MPLBACKEND=Agg
-export SINGULARITYENV_MPLBACKEND=Agg
-export SINGULARITYENV_FS_LICENSE=/fs/license.txt
+export APPTAINERENV_MPLBACKEND=Agg
+export APPTAINERENV_FS_LICENSE=/fs/license.txt
 
 apptainer run --cleanenv \
   -B "$BIDS_DIR":/data \
