@@ -95,7 +95,7 @@ else
 fi
 
 # ============================================================
-# TEMPLATEFLOW CACHE (FIXED SAFE VERSION)
+# TEMPLATEFLOW CACHE + PRE-DOWNLOAD (FIXED PROPER VERSION)
 # ============================================================
 
 echo ""
@@ -109,8 +109,22 @@ export APPTAINERENV_TEMPLATEFLOW_HOME="$TF_DIR"
 
 TF_STATUS="SUCCESS"
 
-echo "✔ TemplateFlow cache directory ready (no login-node downloads)"
-echo "   Templates will be used from cache or fetched inside container if needed"
+echo "✔ TemplateFlow cache directory ready"
+
+echo ""
+echo "Pre-downloading required TemplateFlow templates using container..."
+
+apptainer exec "$FMRIPREP_IMAGE" python -c "
+from templateflow import api
+api.get('OASIS30ANTs')
+api.get('MNI152NLin2009cAsym')
+" || TF_STATUS="FAILED"
+
+if [ "$TF_STATUS" = "SUCCESS" ]; then
+    echo "✔ TemplateFlow templates pre-downloaded successfully"
+else
+    echo "✘ TemplateFlow download FAILED (check network or cache permissions)"
+fi
 
 # ============================================================
 # FINAL REPORT
