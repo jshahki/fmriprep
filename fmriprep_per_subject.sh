@@ -1,16 +1,17 @@
 #!/bin/bash
 #SBATCH --job-name=fmriprep
 #SBATCH --time=10:00:00
+#SBATCH --nodes=1
 #SBATCH --cpus-per-task=20
 #SBATCH --mem-per-cpu=10000
-#SBATCH --account=def-woodward
+#SBATCH --account=st-toddwood-1
 #SBATCH --output=logs/fmriprep_%A_%a.out
 #SBATCH --error=logs/fmriprep_%A_%a.err
 
 module load StdEnv/2023
 module load apptainer
 
-REPO_DIR="/scratch/$USER/fmriprep"
+REPO_DIR="/scratch/st-toddwood-1/$USER/fmriprep"
 BIDS_DIR="$REPO_DIR/data"
 OUTPUT_DIR="$REPO_DIR/derivatives"
 WORK_DIR="$SLURM_TMPDIR/work"
