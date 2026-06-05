@@ -37,6 +37,15 @@ export MPLBACKEND=Agg
 export APPTAINERENV_MPLBACKEND=Agg
 export APPTAINERENV_FS_LICENSE=/fs/license.txt
 
+CACHE_DIR="$REPO_DIR/cache"
+
+mkdir -p "$CACHE_DIR/template_flow"
+mkdir -p "$CACHE_DIR/apptainer"
+
+export XDG_CACHE_HOME="$CACHE_DIR"
+export TEMPLATEFLOW_HOME="$CACHE_DIR/templateflow"
+export APPTAINER_CACHEDIR="$CACHE_DIR/apptainer"
+
 apptainer run --cleanenv \
   -B "$BIDS_DIR":/data \
   -B "$OUTPUT_DIR":/out \
