@@ -4,21 +4,21 @@
 #SBATCH --time=02:00:00
 #SBATCH --cpus-per-task=4
 #SBATCH --mem-per-cpu=10000
-#SBATCH --account=def-woodward
+#SBATCH --account=st-toddwood-1
 #SBATCH --output=logs/fmriprep_setup_%A_%a.out
 #SBATCH --error=logs/fmriprep_setup_%A_%a.err
 
 # ----------- Basic Environment Setup -----------
 
+# Ensure SLURM output directory exists (relative to submission location)
+mkdir -p logs
+
 echo "SLURM job started at $(date)"
 echo "Running on host: $(hostname)"
 echo "User: $USER"
 
-# Ensure SLURM output directory exists (relative to submission location)
-mkdir -p logs
-
 # Define paths
-REPO_DIR="/scratch/$USER/fmriprep"
+REPO_DIR="/scratch/st-toddwood-1/$USER/fmriprep"
 FMRIPREP_IMAGE="$REPO_DIR/fmriprep-20.2.7.sif"
 SPM_DIR="$REPO_DIR/tools/spm-25.01.02"  # <- Keep original name
 SPM_ZIP="$REPO_DIR/tools/spm25.zip"
