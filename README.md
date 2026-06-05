@@ -8,7 +8,7 @@ Statistical Parametric Mapping (SPM): https://www.fil.ion.ucl.ac.uk/spm/.
 # Steps to Run the Pipeline
 
 ## Software Setup
-Upon logging in to your Compute Canada cluster, please run the following code on Terminal:
+Upon logging on to Sockeye (https://ondemand.arc.ubc.ca/pun/sys/dashboard/), please run the following code on the Terminal:
 
 ```sh
 SCRATCH_DIR="/scratch/st-toddwood-1/$USER"
@@ -21,7 +21,7 @@ git clone -b Sockeye_Version_2.0 --single-branch https://github.com/jshahki/fmri
 
 cd /scratch/st-toddwood-1/$USER/fmriprep
 
-sbatch ./fmriprep_setup.sh
+source /fmriprep_setup.sh
 ```
 
 This will set up the environment for running both fMRIPrep and SPM25 smoothing.
