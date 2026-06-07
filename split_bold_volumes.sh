@@ -8,22 +8,29 @@
 #SBATCH --output=logs/split_%A_%a.out
 #SBATCH --error=logs/split_%A_%a.err
 
+set -euo pipefail
+
 module purge
 module load gcc/9.4.0
-module load apptainer/1.3.1 fsl/6.0.7.7
+module load apptainer/1.3.1
 
 # ==========================
 # PATH SETUP
 # ==========================
+
 REPO_DIR="/scratch/st-toddwood-1/$USER/fmriprep"
+
+FMRIPREP_IMAGE="$REPO_DIR/fmriprep-20.2.7.sif"
 FMRIPREP_DIR="$REPO_DIR/derivatives/fmriprep"
 SPLIT_DIR="$REPO_DIR/split_reslice_inputs"
 PARTICIPANTS="$REPO_DIR/data/participants.tsv"
 
+mkdir -p "$SPLIT_DIR"
+
 mapfile -t SUBJECTS < <(tail -n +2 "$PARTICIPANTS" | cut -f1 | sed 's/\r//')
 SUBJECT="${SUBJECTS[$SLURM_ARRAY_TASK_ID]}"
 
-if [ -z "$SUBJECT" ]; then
+if [ -z "${SUBJECT:-}" ]; then
     echo "No subject found for index $SLURM_ARRAY_TASK_ID"
     exit 1
 fi
@@ -31,143 +38,170 @@ fi
 in_subj_dir="$FMRIPREP_DIR/$SUBJECT"
 out_subj_dir="$SPLIT_DIR/$SUBJECT"
 
-# Detect session directories (e.g., ses-01, ses-pre, etc.)
-ses_dirs=($(find "$in_subj_dir" -maxdepth 1 -type d -name "ses-*"))
-has_sessions=false
-if [ ${#ses_dirs[@]} -gt 0 ]; then
-    has_sessions=true
-fi
-
 mkdir -p "$out_subj_dir"
 
 echo "====================================="
 echo "Processing subject: $SUBJECT"
-echo "Has session folders: $has_sessions"
 echo "====================================="
 
 # ==========================
-# FUNCTION DEFINITIONS
+# COLLECT FILES
 # ==========================
 
-# Function to split a single BOLD file into volumes
+all_bold_files=($(find "$in_subj_dir" -type f -name "*space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz"))
+
+if [ ${#all_bold_files[@]} -eq 0 ]; then
+    echo "No fMRI files found for $SUBJECT"
+    exit 1
+fi
+
+# ==========================
+# LABEL DETECTION (GLOBAL)
+# ==========================
+
+task_labels=($(printf "%s\n" "${all_bold_files[@]}" | grep -o "task-[A-Za-z0-9_-]\+" | sort -u))
+MULTI_TASK=false
+[ ${#task_labels[@]} -gt 1 ] && MULTI_TASK=true
+
+ses_labels=($(printf "%s\n" "${all_bold_files[@]}" | grep -o "ses-[A-Za-z0-9_-]\+" | sort -u))
+MULTI_SES=false
+[ ${#ses_labels[@]} -gt 1 ] && MULTI_SES=true
+
+acq_labels=($(printf "%s\n" "${all_bold_files[@]}" | grep -o "acq-[A-Za-z0-9_-]\+" | sort -u))
+MULTI_ACQ=false
+[ ${#acq_labels[@]} -gt 1 ] && MULTI_ACQ=true
+
+echo_labels=($(printf "%s\n" "${all_bold_files[@]}" | grep -o "echo-[A-Za-z0-9_-]\+" | sort -u))
+MULTI_ECHO=false
+[ ${#echo_labels[@]} -gt 1 ] && MULTI_ECHO=true
+
+run_labels=($(printf "%s\n" "${all_bold_files[@]}" | grep -o "run-[0-9]\+" | sed 's/run-0*/run-/' | sort -u))
+MULTI_RUN=false
+[ ${#run_labels[@]} -gt 1 ] && MULTI_RUN=true
+
+# ==========================
+# OUTPUT LABEL BUILDER
+# ==========================
+
+build_output_label() {
+
+    local file="$1"
+    local base
+    base=$(basename "$file")
+
+    local parts=()
+
+    local task_label ses_label acq_label echo_label run_label
+
+    task_label=$(echo "$base" | grep -o "task-[A-Za-z0-9_-]\+" || true)
+    ses_label=$(echo "$base" | grep -o "ses-[A-Za-z0-9_-]\+" || true)
+    acq_label=$(echo "$base" | grep -o "acq-[A-Za-z0-9_-]\+" || true)
+    echo_label=$(echo "$base" | grep -o "echo-[A-Za-z0-9_-]\+" || true)
+    run_label=$(echo "$base" | grep -o "run-[0-9]\+" | sed 's/run-0*//' || true)
+
+    # TASK
+    if [ "$MULTI_TASK" = true ] && [ -n "$task_label" ]; then
+        parts+=("$task_label")
+    fi
+
+    # SES
+    if [ "$MULTI_SES" = true ] && [ -n "$ses_label" ]; then
+        parts+=("$ses_label")
+    fi
+
+    # ACQ
+    if [ "$MULTI_ACQ" = true ] && [ -n "$acq_label" ]; then
+        parts+=("$acq_label")
+    fi
+
+    # ECHO
+    if [ "$MULTI_ECHO" = true ] && [ -n "$echo_label" ]; then
+        parts+=("$echo_label")
+    fi
+
+    # RUN
+    if [ "$MULTI_RUN" = true ] && [ -n "$run_label" ]; then
+        parts+=("run-$run_label")
+    fi
+
+    # JOIN
+    local out=""
+    for p in "${parts[@]}"; do
+        if [ -z "$out" ]; then
+            out="$p"
+        else
+            out="${out}_${p}"
+        fi
+    done
+
+    echo "$out"
+}
+
+# ==========================
+# PROCESS FUNCTION
+# ==========================
+
 process_bold_file() {
+
     local bold_file="$1"
     local output_dir="$2"
 
     mkdir -p "$output_dir"
-    echo "Copying $(basename "$bold_file") to $output_dir"
-    cp "$bold_file" "$output_dir"
 
-    cd "$output_dir" || exit 1
+    echo "Processing: $(basename "$bold_file")"
+    echo "Output dir: $output_dir"
+
+    cp "$bold_file" "$output_dir"
+    cd "$output_dir"
+
     local base_name
     base_name=$(basename "$bold_file" .nii.gz)
 
-    echo "Splitting $base_name.nii.gz ..."
-    fslsplit "$base_name.nii.gz" "${base_name}_tmp_" -t
+    apptainer exec "$FMRIPREP_IMAGE" fslsplit \
+        "$base_name.nii.gz" \
+        "${base_name}_tmp_" \
+        -t
+
+    if ! ls ${base_name}_tmp_*.nii.gz >/dev/null 2>&1; then
+        echo "ERROR: fslsplit failed for $base_name"
+        return 1
+    fi
 
     i=1
     for f in ${base_name}_tmp_*.nii.gz; do
-        suffix=$(printf "%04d" $i)
+        suffix=$(printf "%04d" "$i")
         new_name="${base_name}_${suffix}.nii.gz"
+
         mv "$f" "$new_name"
         gunzip -f "$new_name"
+
         ((i++))
     done
 
     rm -f "$base_name.nii.gz"
-    echo "Finished splitting $base_name"
+    rm -f ${base_name}_tmp_*.nii.gz 2>/dev/null || true
+
+    echo "Finished: $base_name"
 }
 
 # ==========================
-# MAIN LOGIC
+# MAIN LOOP
 # ==========================
 
-if [ "$has_sessions" = false ]; then
-    # Case 1: No explicit ses-* directories
-    bold_files=($(find "$in_subj_dir" -type f -name "*space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz"))
+for f in "${all_bold_files[@]}"; do
 
-    if [ ${#bold_files[@]} -eq 0 ]; then
-        echo "No fMRI files found for $SUBJECT"
-        exit 1
-    fi
+    out_dir="$out_subj_dir/$(build_output_label "$f")"
 
-    # Try detecting sessions from filenames (e.g., ses-pre, ses-01)
-    session_labels=($(printf "%s\n" "${bold_files[@]}" | grep -o "ses-[A-Za-z0-9]\+" | sort -u))
-    if [ ${#session_labels[@]} -gt 0 ]; then
-        echo "Detected session labels in filenames: ${session_labels[*]}"
-        has_sessions=true
-    fi
-fi
-
-if [ "$has_sessions" = true ]; then
-    # Multi-session (either real folders or from filenames)
-    echo "Detected multiple or named sessions for $SUBJECT"
-
-    if [ ${#ses_dirs[@]} -eq 0 ]; then
-        # No actual session directories — build from filenames instead
-        ses_dirs=("${session_labels[@]}")
-    fi
-
-    for ses_entry in "${ses_dirs[@]}"; do
-        # Determine whether it's a directory or just a session label
-        if [ -d "$ses_entry" ]; then
-            ses_label=$(basename "$ses_entry")
-            ses_bold_files=($(find "$ses_entry" -type f -name "*space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz"))
-        else
-            ses_label="$ses_entry"
-            ses_bold_files=($(find "$in_subj_dir" -type f -name "*${ses_label}_*space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz"))
-        fi
-
-        if [ ${#ses_bold_files[@]} -eq 0 ]; then
-            echo "No fMRI files found for $SUBJECT $ses_label"
-            continue
-        fi
-
-        # Detect runs
-        run_labels=($(printf "%s\n" "${ses_bold_files[@]}" | grep -o "run-[0-9]\+" | sed 's/run-0*/run-/' | sort -u))
-        if [ ${#run_labels[@]} -eq 0 ]; then
-            echo "Detected single run for $ses_label"
-            for f in "${ses_bold_files[@]}"; do
-                out_dir_ses="$out_subj_dir/$ses_label"
-                process_bold_file "$f" "$out_dir_ses"
-            done
-        else
-            echo "Detected runs for $ses_label: ${run_labels[*]}"
-            for f in "${ses_bold_files[@]}"; do
-                run_label=$(basename "$f" | grep -o "run-[0-9]\+" | sed 's/run-0*/run-/')
-                ses_run_dir="${ses_label}_${run_label}"
-                out_dir_ses_run="$out_subj_dir/$ses_run_dir"
-                process_bold_file "$f" "$out_dir_ses_run"
-            done
-        fi
-    done
-
-else
-    # Case 2: Truly no sessions at all
-    echo "Detected single-session structure for $SUBJECT"
-    bold_files=($(find "$in_subj_dir" -type f -name "*space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz"))
-
-    run_labels=($(printf "%s\n" "${bold_files[@]}" | grep -o "run-[0-9]\+" | sed 's/run-0*/run-/' | sort -u))
-    if [ ${#run_labels[@]} -eq 0 ]; then
-        echo "Detected single run, single session"
-        for f in "${bold_files[@]}"; do
-            process_bold_file "$f" "$out_subj_dir"
-        done
-    else
-        echo "Detected runs for $SUBJECT: ${run_labels[*]}"
-        for f in "${bold_files[@]}"; do
-            run_label=$(basename "$f" | grep -o "run-[0-9]\+" | sed 's/run-0*/run-/')
-            out_dir_run="$out_subj_dir/$run_label"
-            process_bold_file "$f" "$out_dir_run"
-        done
-    fi
-fi
+    process_bold_file "$f" "$out_dir"
+done
 
 # ==========================
-# LOGGING SUCCESS
+# LOG SUCCESS
 # ==========================
+
 STATUS_FILE="$REPO_DIR/logs/status/${SUBJECT}_split_SUCCESS.txt"
 mkdir -p "$(dirname "$STATUS_FILE")"
+
 {
     echo "Subject: $SUBJECT"
     echo "Job ID: $SLURM_JOB_ID"
@@ -176,4 +210,3 @@ mkdir -p "$(dirname "$STATUS_FILE")"
 
 echo "Finished processing $SUBJECT"
 echo "====================================="
-
