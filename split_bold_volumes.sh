@@ -13,7 +13,6 @@ set -euo pipefail
 module purge
 module load gcc/9.4.0
 module load apptainer/1.3.1
-module load parallel/20220522
 
 # ==========================
 # PATH SETUP
@@ -78,7 +77,7 @@ fi
 echo "Tasks found: ${task_list[*]:-none}"
 
 # ==========================
-# PROCESS FUNCTION (PARALLEL SAFE)
+# PROCESS FUNCTION
 # ==========================
 
 process_bold_file() {
@@ -129,7 +128,7 @@ process_bold_file() {
     mkdir -p "$out_dir"
 
     # --------------------------
-    # COPY + SPLIT (NO cd!)
+    # COPY + SPLIT
     # --------------------------
 
     local base_name
@@ -170,10 +169,28 @@ export out_subj_dir
 export multi_task
 
 # ==========================
-# PARALLEL EXECUTION
+# PARALLEL EXECUTION (NO GNU parallel)
 # ==========================
 
-parallel -j "$SLURM_CPUS_PER_TASK" process_bold_file ::: "${all_bold_files[@]}"
+N_JOBS="$SLURM_CPUS_PER_TASK"
+
+echo "Running with $N_JOBS parallel workers (bash background jobs)"
+
+job_count=0
+
+for f in "${all_bold_files[@]}"; do
+    process_bold_file "$f" &
+
+    ((job_count++))
+
+    # throttle
+    if (( job_count >= N_JOBS )); then
+        wait
+        job_count=0
+    fi
+done
+
+wait
 
 # ==========================
 # STATUS LOG
