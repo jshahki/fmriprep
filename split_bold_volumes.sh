@@ -74,10 +74,10 @@ if [ "${#task_list[@]}" -gt 1 ]; then
     multi_task=true
 fi
 
-echo "Tasks found: ${task_list[*]:-none}"
+echo "Tasks found: ${task_list[*]}"
 
 # ==========================
-# PROCESS FUNCTION
+# PROCESS FUNCTION (FIXED)
 # ==========================
 
 process_bold_file() {
@@ -127,25 +127,40 @@ process_bold_file() {
     local out_dir="$out_subj_dir/$out_name"
     mkdir -p "$out_dir"
 
-    # --------------------------
-    # COPY + SPLIT
-    # --------------------------
+    # ==========================
+    # COPY FILE (FIX #3 SAFE CHECK)
+    # ==========================
 
     local base_name
     base_name=$(basename "$bold_file" .nii.gz)
 
     cp "$bold_file" "$out_dir/"
 
-    echo "Splitting: $fname -> $out_name"
+    if [ ! -f "$out_dir/$base_name.nii.gz" ]; then
+        echo "ERROR: missing copied file for $fname" >&2
+        return 1
+    fi
+
+    echo "START SPLIT: $fname -> $out_name"
+
+    # ==========================
+    # FSLSPLIT (FIX #2 LOGGING)
+    # ==========================
 
     apptainer exec "$FMRIPREP_IMAGE" fslsplit \
         "$out_dir/$base_name.nii.gz" \
-        "$out_dir/${base_name}_tmp_" -t
+        "$out_dir/${base_name}_tmp_" -t \
+        >>"$out_dir/split_stdout.log" \
+        2>>"$out_dir/split_stderr.log"
 
     if ! ls "$out_dir/${base_name}_tmp_"*.nii.gz >/dev/null 2>&1; then
-        echo "ERROR: fslsplit failed for $fname"
+        echo "ERROR: fslsplit failed for $fname" >&2
         return 1
     fi
+
+    # ==========================
+    # RENAME VOLUMES
+    # ==========================
 
     local i=1
     for f in "$out_dir/${base_name}_tmp_"*.nii.gz; do
@@ -160,7 +175,7 @@ process_bold_file() {
 
     rm -f "$out_dir/$base_name.nii.gz"
 
-    echo "Finished: $fname"
+    echo "FINISHED: $fname"
 }
 
 export -f process_bold_file
@@ -169,21 +184,22 @@ export out_subj_dir
 export multi_task
 
 # ==========================
-# PARALLEL EXECUTION (NO GNU parallel)
+# PARALLEL EXECUTION (FIX #4 SAFE BASH PARALLELISM)
 # ==========================
 
 N_JOBS="$SLURM_CPUS_PER_TASK"
 
-echo "Running with $N_JOBS parallel workers (bash background jobs)"
+echo "Running with $N_JOBS parallel workers"
 
 job_count=0
 
 for f in "${all_bold_files[@]}"; do
-    process_bold_file "$f" &
+    process_bold_file "$f" \
+        >"$out_subj_dir/job_${job_count}.out" \
+        2>&1 &
 
     ((job_count++))
 
-    # throttle
     if (( job_count >= N_JOBS )); then
         wait
         job_count=0
