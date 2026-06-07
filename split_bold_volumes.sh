@@ -50,6 +50,11 @@ echo "====================================="
 
 all_bold_files=($(find "$in_subj_dir" -type f -name "*space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz"))
 
+echo "Searching in: $in_subj_dir"
+echo "Found BOLD files:"
+printf '%s\n' "${all_bold_files[@]:-NONE}"
+echo "Count: ${#all_bold_files[@]}"
+
 if [ ${#all_bold_files[@]} -eq 0 ]; then
     echo "No fMRI files found for $SUBJECT"
     exit 1
