@@ -139,26 +139,30 @@ for f in "${all_bold_files[@]}"; do
     # BUILD OUTPUT NAME
     # --------------------------
 
-    out_name="$SUBJECT"
+    out_name=""
 
     if [ -n "$ses" ]; then
-        out_name="${out_name}_${ses}"
+        out_name="${ses}"
     fi
 
     if [ "$multi_task" = true ] && [ -n "$task" ]; then
-        out_name="${out_name}_${task}"
+        [ -n "$out_name" ] && out_name="${out_name}_"
+        out_name="${out_name}${task}"
     fi
 
     if [ -n "$acq" ]; then
-        out_name="${out_name}_${acq}"
+        [ -n "$out_name" ] && out_name="${out_name}_"
+        out_name="${out_name}${acq}"
     fi
 
     if [ -n "$echoe" ]; then
-        out_name="${out_name}_${echoe}"
+        [ -n "$out_name" ] && out_name="${out_name}_"
+        out_name="${out_name}${echoe}"
     fi
 
     if [ -n "$run" ]; then
-        out_name="${out_name}_${run}"
+        [ -n "$out_name" ] && out_name="${out_name}_"
+        out_name="${out_name}${run}"
     fi
 
     out_dir="$out_subj_dir/$out_name"
