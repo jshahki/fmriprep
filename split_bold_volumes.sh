@@ -25,8 +25,6 @@ FMRIPREP_DIR="$REPO_DIR/derivatives/fmriprep"
 SPLIT_DIR="$REPO_DIR/split_reslice_inputs"
 PARTICIPANTS="$REPO_DIR/data/participants.tsv"
 
-mkdir -p "$SPLIT_DIR"
-
 mapfile -t SUBJECTS < <(tail -n +2 "$PARTICIPANTS" | cut -f1 | sed 's/\r//')
 SUBJECT="${SUBJECTS[$SLURM_ARRAY_TASK_ID]}"
 
@@ -42,130 +40,70 @@ mkdir -p "$out_subj_dir"
 
 echo "====================================="
 echo "Processing subject: $SUBJECT"
+echo "Input dir: $in_subj_dir"
+echo "Output dir: $out_subj_dir"
 echo "====================================="
 
 # ==========================
-# COLLECT FILES
+# FIND ALL BOLD FILES (FIXED CORE BUG)
 # ==========================
 
-all_bold_files=($(find "$in_subj_dir" -type f -name "*space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz"))
+mapfile -t all_bold_files < <(
+    find "$in_subj_dir" -type f -name "*_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz"
+)
 
+# DEBUG BLOCK (YOU ASKED FOR THIS)
 echo "Searching in: $in_subj_dir"
 echo "Found BOLD files:"
 printf '%s\n' "${all_bold_files[@]:-NONE}"
 echo "Count: ${#all_bold_files[@]}"
 
-if [ ${#all_bold_files[@]} -eq 0 ]; then
-    echo "No fMRI files found for $SUBJECT"
+if [ "${#all_bold_files[@]}" -eq 0 ]; then
+    echo "ERROR: No BOLD files found"
     exit 1
 fi
 
 # ==========================
-# LABEL DETECTION (GLOBAL)
+# DETECT GLOBAL LABEL CONDITIONS
 # ==========================
 
-task_labels=($(printf "%s\n" "${all_bold_files[@]}" | grep -o "task-[A-Za-z0-9_-]\+" | sort -u))
-MULTI_TASK=false
-[ ${#task_labels[@]} -gt 1 ] && MULTI_TASK=true
+mapfile -t task_list < <(printf "%s\n" "${all_bold_files[@]}" | grep -oE "task-[^_/]+" | sort -u)
+mapfile -t ses_list  < <(printf "%s\n" "${all_bold_files[@]}" | grep -oE "ses-[^_/]+"  | sort -u)
+mapfile -t acq_list  < <(printf "%s\n" "${all_bold_files[@]}" | grep -oE "acq-[^_/]+"  | sort -u)
+mapfile -t echo_list < <(printf "%s\n" "${all_bold_files[@]}" | grep -oE "echo-[^_/]+" | sort -u)
+mapfile -t run_list  < <(printf "%s\n" "${all_bold_files[@]}" | grep -oE "run-[0-9]+"  | sort -u)
 
-ses_labels=($(printf "%s\n" "${all_bold_files[@]}" | grep -o "ses-[A-Za-z0-9_-]\+" | sort -u))
-MULTI_SES=false
-[ ${#ses_labels[@]} -gt 1 ] && MULTI_SES=true
+multi_task=false
+if [ "${#task_list[@]}" -gt 1 ]; then
+    multi_task=true
+fi
 
-acq_labels=($(printf "%s\n" "${all_bold_files[@]}" | grep -o "acq-[A-Za-z0-9_-]\+" | sort -u))
-MULTI_ACQ=false
-[ ${#acq_labels[@]} -gt 1 ] && MULTI_ACQ=true
-
-echo_labels=($(printf "%s\n" "${all_bold_files[@]}" | grep -o "echo-[A-Za-z0-9_-]\+" | sort -u))
-MULTI_ECHO=false
-[ ${#echo_labels[@]} -gt 1 ] && MULTI_ECHO=true
-
-run_labels=($(printf "%s\n" "${all_bold_files[@]}" | grep -o "run-[0-9]\+" | sed 's/run-0*/run-/' | sort -u))
-MULTI_RUN=false
-[ ${#run_labels[@]} -gt 1 ] && MULTI_RUN=true
+echo "Tasks found: ${task_list[*]:-none}"
+echo "Sessions found: ${ses_list[*]:-none}"
+echo "Acq found: ${acq_list[*]:-none}"
+echo "Echo found: ${echo_list[*]:-none}"
+echo "Runs found: ${run_list[*]:-none}"
 
 # ==========================
-# OUTPUT LABEL BUILDER
-# ==========================
-
-build_output_label() {
-
-    local file="$1"
-    local base
-    base=$(basename "$file")
-
-    local parts=()
-
-    local task_label ses_label acq_label echo_label run_label
-
-    task_label=$(echo "$base" | grep -o "task-[A-Za-z0-9_-]\+" || true)
-    ses_label=$(echo "$base" | grep -o "ses-[A-Za-z0-9_-]\+" || true)
-    acq_label=$(echo "$base" | grep -o "acq-[A-Za-z0-9_-]\+" || true)
-    echo_label=$(echo "$base" | grep -o "echo-[A-Za-z0-9_-]\+" || true)
-    run_label=$(echo "$base" | grep -o "run-[0-9]\+" | sed 's/run-0*//' || true)
-
-    # TASK
-    if [ "$MULTI_TASK" = true ] && [ -n "$task_label" ]; then
-        parts+=("$task_label")
-    fi
-
-    # SES
-    if [ "$MULTI_SES" = true ] && [ -n "$ses_label" ]; then
-        parts+=("$ses_label")
-    fi
-
-    # ACQ
-    if [ "$MULTI_ACQ" = true ] && [ -n "$acq_label" ]; then
-        parts+=("$acq_label")
-    fi
-
-    # ECHO
-    if [ "$MULTI_ECHO" = true ] && [ -n "$echo_label" ]; then
-        parts+=("$echo_label")
-    fi
-
-    # RUN
-    if [ "$MULTI_RUN" = true ] && [ -n "$run_label" ]; then
-        parts+=("run-$run_label")
-    fi
-
-    # JOIN
-    local out=""
-    for p in "${parts[@]}"; do
-        if [ -z "$out" ]; then
-            out="$p"
-        else
-            out="${out}_${p}"
-        fi
-    done
-
-    echo "$out"
-}
-
-# ==========================
-# PROCESS FUNCTION
+# SPLIT FUNCTION
 # ==========================
 
 process_bold_file() {
-
     local bold_file="$1"
     local output_dir="$2"
 
     mkdir -p "$output_dir"
-
-    echo "Processing: $(basename "$bold_file")"
-    echo "Output dir: $output_dir"
-
     cp "$bold_file" "$output_dir"
-    cd "$output_dir"
+
+    cd "$output_dir" || exit 1
 
     local base_name
     base_name=$(basename "$bold_file" .nii.gz)
 
+    echo "Splitting: $base_name"
+
     apptainer exec "$FMRIPREP_IMAGE" fslsplit \
-        "$base_name.nii.gz" \
-        "${base_name}_tmp_" \
-        -t
+        "$base_name.nii.gz" "${base_name}_tmp_" -t
 
     if ! ls ${base_name}_tmp_*.nii.gz >/dev/null 2>&1; then
         echo "ERROR: fslsplit failed for $base_name"
@@ -175,18 +113,12 @@ process_bold_file() {
     i=1
     for f in ${base_name}_tmp_*.nii.gz; do
         suffix=$(printf "%04d" "$i")
-        new_name="${base_name}_${suffix}.nii.gz"
-
-        mv "$f" "$new_name"
-        gunzip -f "$new_name"
-
+        mv "$f" "${base_name}_${suffix}.nii.gz"
+        gunzip -f "${base_name}_${suffix}.nii.gz"
         ((i++))
     done
 
     rm -f "$base_name.nii.gz"
-    rm -f ${base_name}_tmp_*.nii.gz 2>/dev/null || true
-
-    echo "Finished: $base_name"
 }
 
 # ==========================
@@ -195,22 +127,66 @@ process_bold_file() {
 
 for f in "${all_bold_files[@]}"; do
 
-    out_dir="$out_subj_dir/$(build_output_label "$f")"
+    fname=$(basename "$f")
 
-    process_bold_file "$f" "$out_dir"
+    ses=$(echo "$fname"  | grep -oE "ses-[^_/]+" || true)
+    task=$(echo "$fname" | grep -oE "task-[^_/]+" || true)
+    acq=$(echo "$fname"  | grep -oE "acq-[^_/]+" || true)
+    echoe=$(echo "$fname" | grep -oE "echo-[^_/]+" || true)
+    run=$(echo "$fname"  | grep -oE "run-[0-9]+"  || true)
+
+    # --------------------------
+    # BUILD OUTPUT NAME
+    # --------------------------
+
+    out_name="$SUBJECT"
+
+    if [ -n "$ses" ]; then
+        out_name="${out_name}_${ses}"
+    fi
+
+    if [ "$multi_task" = true ] && [ -n "$task" ]; then
+        out_name="${out_name}_${task}"
+    fi
+
+    if [ -n "$acq" ]; then
+        out_name="${out_name}_${acq}"
+    fi
+
+    if [ -n "$echoe" ]; then
+        out_name="${out_name}_${echoe}"
+    fi
+
+    if [ -n "$run" ]; then
+        out_name="${out_name}_${run}"
+    fi
+
+    out_dir="$out_subj_dir/$out_name"
+
+    echo "-------------------------------------"
+    echo "File: $fname"
+    echo "Output folder: $out_dir"
+    echo "-------------------------------------"
+
+    process_bold_file "$f" "$out_dir" || {
+        echo "FAILED: $fname"
+        continue
+    }
+
 done
 
 # ==========================
-# LOG SUCCESS
+# STATUS LOG
 # ==========================
 
 STATUS_FILE="$REPO_DIR/logs/status/${SUBJECT}_split_SUCCESS.txt"
 mkdir -p "$(dirname "$STATUS_FILE")"
 
 {
-    echo "Subject: $SUBJECT"
-    echo "Job ID: $SLURM_JOB_ID"
-    echo "Completed: $(date)"
+echo "Subject: $SUBJECT"
+echo "Job ID: $SLURM_JOB_ID"
+echo "Completed: $(date)"
+echo "Files processed: ${#all_bold_files[@]}"
 } > "$STATUS_FILE"
 
 echo "Finished processing $SUBJECT"
