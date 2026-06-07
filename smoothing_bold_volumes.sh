@@ -1,18 +1,26 @@
 #!/bin/bash
 #SBATCH --job-name=smoothing
 #SBATCH --time=02:00:00
-#SBATCH --cpus-per-task=1
-#SBATCH --mem-per-cpu=30000
-#SBATCH --account=def-woodward
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=2
+#SBATCH --mem=100G
+#SBATCH --account=st-toddwood-1
 #SBATCH --output=logs/smoothing_%A_%a.out
 #SBATCH --error=logs/smoothing_%A_%a.err
 
 # Load modules
-module load matlab/2024b.1
+set -euo pipefail
+
+module purge
+module load gcc/9.4.0
+module load matlab/R2024b
+
 export MATLAB_PREFDIR="$SLURM_TMPDIR/matlab_prefs"
+mkdir -p "$MATLAB_PREFDIR"
+mkdir -p logs
 
 # Setup paths
-REPO_DIR="/scratch/$USER/fmriprep"
+REPO_DIR="/scratch/st-toddwood-1/$USER/fmriprep"
 SPM_DIR="$REPO_DIR/tools/spm-25.01.02"
 DATA_DIR="$REPO_DIR/split_reslice_outputs"            # Resliced + split input dir
 PARTICIPANTS="$REPO_DIR/data/participants.tsv"
