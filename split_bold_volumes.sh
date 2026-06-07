@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=split_bold
-#SBATCH --account=def-woodward
+#SBATCH --account=st-toddwood-1
 #SBATCH --time=02:00:00
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=30000
