@@ -1,16 +1,24 @@
 #!/bin/bash
 #SBATCH --job-name=reslice_bold
-#SBATCH --account=def-woodward
+#SBATCH --account=st-toddwood-1
+#SBATCH --nodes=1
 #SBATCH --time=02:00:00
 #SBATCH --cpus-per-task=1
-#SBATCH --mem-per-cpu=30000
+#SBATCH --mem-per-cpu=60000
 #SBATCH --output=logs/reslice_%A_%a.out
 #SBATCH --error=logs/reslice_%A_%a.err
 
-module load StdEnv/2023 matlab/2024b.1
-export MATLAB_PREFDIR="$SLURM_TMPDIR/matlab_prefs"
+set -euo pipefail
 
-REPO_DIR="/scratch/$USER/fmriprep"
+module purge
+module load gcc/9.4.0
+module load matlab/2024b.1
+
+export MATLAB_PREFDIR="$SLURM_TMPDIR/matlab_prefs"
+mkdir -p "$MATLAB_PREFDIR"
+mkdir -p logs
+
+REPO_DIR="/scratch/st-toddwood-1/$USER/fmriprep"
 SPLIT_INPUT_DIR="$REPO_DIR/split_reslice_inputs"
 RESLICE_OUTPUT_DIR="$REPO_DIR/split_reslice_outputs"
 SPM_PATH="$REPO_DIR/tools/spm-25.01.02"
