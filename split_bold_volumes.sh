@@ -3,8 +3,8 @@
 #SBATCH --account=st-toddwood-1
 #SBATCH --nodes=1
 #SBATCH --time=02:00:00
-#SBATCH --cpus-per-task=8
-#SBATCH --mem-per-cpu=5000
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=30000
 #SBATCH --output=logs/split_%A_%a.out
 #SBATCH --error=logs/split_%A_%a.err
 
@@ -42,17 +42,17 @@ echo "====================================="
 echo "Processing subject: $SUBJECT"
 echo "Input dir: $in_subj_dir"
 echo "Output dir: $out_subj_dir"
-echo "CPUs: $SLURM_CPUS_PER_TASK"
 echo "====================================="
 
 # ==========================
-# FIND ALL BOLD FILES
+# FIND ALL BOLD FILES (FIXED CORE BUG)
 # ==========================
 
 mapfile -t all_bold_files < <(
     find "$in_subj_dir" -type f -name "*_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz"
 )
 
+# DEBUG BLOCK (YOU ASKED FOR THIS)
 echo "Searching in: $in_subj_dir"
 echo "Found BOLD files:"
 printf '%s\n' "${all_bold_files[@]:-NONE}"
@@ -64,29 +64,70 @@ if [ "${#all_bold_files[@]}" -eq 0 ]; then
 fi
 
 # ==========================
-# LABEL DETECTION
+# DETECT GLOBAL LABEL CONDITIONS
 # ==========================
 
 mapfile -t task_list < <(printf "%s\n" "${all_bold_files[@]}" | grep -oE "task-[^_/]+" | sort -u)
+mapfile -t ses_list  < <(printf "%s\n" "${all_bold_files[@]}" | grep -oE "ses-[^_/]+"  | sort -u)
+mapfile -t acq_list  < <(printf "%s\n" "${all_bold_files[@]}" | grep -oE "acq-[^_/]+"  | sort -u)
+mapfile -t echo_list < <(printf "%s\n" "${all_bold_files[@]}" | grep -oE "echo-[^_/]+" | sort -u)
+mapfile -t run_list  < <(printf "%s\n" "${all_bold_files[@]}" | grep -oE "run-[0-9]+"  | sort -u)
 
 multi_task=false
 if [ "${#task_list[@]}" -gt 1 ]; then
     multi_task=true
 fi
 
-echo "Tasks found: ${task_list[*]}"
+echo "Tasks found: ${task_list[*]:-none}"
+echo "Sessions found: ${ses_list[*]:-none}"
+echo "Acq found: ${acq_list[*]:-none}"
+echo "Echo found: ${echo_list[*]:-none}"
+echo "Runs found: ${run_list[*]:-none}"
 
 # ==========================
-# PROCESS FUNCTION (FIXED)
+# SPLIT FUNCTION
 # ==========================
 
 process_bold_file() {
     local bold_file="$1"
+    local output_dir="$2"
 
-    local fname
-    fname=$(basename "$bold_file")
+    mkdir -p "$output_dir"
+    cp "$bold_file" "$output_dir"
 
-    local ses task acq echoe run
+    cd "$output_dir" || exit 1
+
+    local base_name
+    base_name=$(basename "$bold_file" .nii.gz)
+
+    echo "Splitting: $base_name"
+
+    apptainer exec "$FMRIPREP_IMAGE" fslsplit \
+        "$base_name.nii.gz" "${base_name}_tmp_" -t
+
+    if ! ls ${base_name}_tmp_*.nii.gz >/dev/null 2>&1; then
+        echo "ERROR: fslsplit failed for $base_name"
+        return 1
+    fi
+
+    i=1
+    for f in ${base_name}_tmp_*.nii.gz; do
+        suffix=$(printf "%04d" "$i")
+        mv "$f" "${base_name}_${suffix}.nii.gz"
+        gunzip -f "${base_name}_${suffix}.nii.gz"
+        ((i++))
+    done
+
+    rm -f "$base_name.nii.gz"
+}
+
+# ==========================
+# MAIN LOOP
+# ==========================
+
+for f in "${all_bold_files[@]}"; do
+
+    fname=$(basename "$f")
 
     ses=$(echo "$fname"  | grep -oE "ses-[^_/]+" || true)
     task=$(echo "$fname" | grep -oE "task-[^_/]+" || true)
@@ -98,7 +139,7 @@ process_bold_file() {
     # BUILD OUTPUT NAME
     # --------------------------
 
-    local out_name=""
+    out_name=""
 
     if [ -n "$ses" ]; then
         out_name="${ses}"
@@ -124,89 +165,19 @@ process_bold_file() {
         out_name="${out_name}${run}"
     fi
 
-    local out_dir="$out_subj_dir/$out_name"
-    mkdir -p "$out_dir"
+    out_dir="$out_subj_dir/$out_name"
 
-    # ==========================
-    # COPY FILE (FIX #3 SAFE CHECK)
-    # ==========================
+    echo "-------------------------------------"
+    echo "File: $fname"
+    echo "Output folder: $out_dir"
+    echo "-------------------------------------"
 
-    local base_name
-    base_name=$(basename "$bold_file" .nii.gz)
+    process_bold_file "$f" "$out_dir" || {
+        echo "FAILED: $fname"
+        continue
+    }
 
-    cp "$bold_file" "$out_dir/"
-
-    if [ ! -f "$out_dir/$base_name.nii.gz" ]; then
-        echo "ERROR: missing copied file for $fname" >&2
-        return 1
-    fi
-
-    echo "START SPLIT: $fname -> $out_name"
-
-    # ==========================
-    # FSLSPLIT (FIX #2 LOGGING)
-    # ==========================
-
-    apptainer exec "$FMRIPREP_IMAGE" fslsplit \
-        "$out_dir/$base_name.nii.gz" \
-        "$out_dir/${base_name}_tmp_" -t \
-        >>"$out_dir/split_stdout.log" \
-        2>>"$out_dir/split_stderr.log"
-
-    if ! ls "$out_dir/${base_name}_tmp_"*.nii.gz >/dev/null 2>&1; then
-        echo "ERROR: fslsplit failed for $fname" >&2
-        return 1
-    fi
-
-    # ==========================
-    # RENAME VOLUMES
-    # ==========================
-
-    local i=1
-    for f in "$out_dir/${base_name}_tmp_"*.nii.gz; do
-        local suffix
-        suffix=$(printf "%04d" "$i")
-
-        mv "$f" "$out_dir/${base_name}_${suffix}.nii.gz"
-        gunzip -f "$out_dir/${base_name}_${suffix}.nii.gz"
-
-        ((i++))
-    done
-
-    rm -f "$out_dir/$base_name.nii.gz"
-
-    echo "FINISHED: $fname"
-}
-
-export -f process_bold_file
-export FMRIPREP_IMAGE
-export out_subj_dir
-export multi_task
-
-# ==========================
-# PARALLEL EXECUTION (FIX #4 SAFE BASH PARALLELISM)
-# ==========================
-
-N_JOBS="$SLURM_CPUS_PER_TASK"
-
-echo "Running with $N_JOBS parallel workers"
-
-job_count=0
-
-for f in "${all_bold_files[@]}"; do
-    process_bold_file "$f" \
-        >"$out_subj_dir/job_${job_count}.out" \
-        2>&1 &
-
-    ((job_count++))
-
-    if (( job_count >= N_JOBS )); then
-        wait
-        job_count=0
-    fi
 done
-
-wait
 
 # ==========================
 # STATUS LOG
