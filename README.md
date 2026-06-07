@@ -17,7 +17,7 @@ mkdir -p "$SCRATCH_DIR"
 
 cd "$SCRATCH_DIR"
 
-git clone -b Sockeye_Version_2.0 --single-branch https://github.com/jshahki/fmriprep.git
+git clone -b Sockeye_Version_3.0 --single-branch https://github.com/jshahki/fmriprep.git
 
 cd /scratch/st-toddwood-1/$USER/fmriprep
 
