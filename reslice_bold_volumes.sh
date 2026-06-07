@@ -12,7 +12,7 @@ set -euo pipefail
 
 module purge
 module load gcc/9.4.0
-module load matlab/2024b.1
+module load matlab/2024b
 
 export MATLAB_PREFDIR="$SLURM_TMPDIR/matlab_prefs"
 mkdir -p "$MATLAB_PREFDIR"
