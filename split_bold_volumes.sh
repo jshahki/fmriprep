@@ -1,18 +1,21 @@
 #!/bin/bash
 #SBATCH --job-name=split_bold
 #SBATCH --account=st-toddwood-1
+#SBATCH --nodes=1
 #SBATCH --time=02:00:00
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=30000
 #SBATCH --output=logs/split_%A_%a.out
 #SBATCH --error=logs/split_%A_%a.err
 
-module load StdEnv/2023 fsl/6.0.7.7
+module purge
+module load gcc/9.4.0
+module load apptainer/1.3.1 fsl/6.0.7.7
 
 # ==========================
 # PATH SETUP
 # ==========================
-REPO_DIR="/scratch/$USER/fmriprep"
+REPO_DIR="/scratch/st-toddwood-1/$USER/fmriprep"
 FMRIPREP_DIR="$REPO_DIR/derivatives/fmriprep"
 SPLIT_DIR="$REPO_DIR/split_reslice_inputs"
 PARTICIPANTS="$REPO_DIR/data/participants.tsv"
