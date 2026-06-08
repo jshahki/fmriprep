@@ -19,8 +19,8 @@ mkdir -p "$MATLAB_PREFDIR"
 mkdir -p logs
 
 REPO_DIR="/scratch/st-toddwood-1/$USER/fmriprep"
-SPLIT_INPUT_DIR="$REPO_DIR/split_reslice_inputs"
-RESLICE_OUTPUT_DIR="$REPO_DIR/split_reslice_outputs"
+SPLIT_INPUT_DIR="$REPO_DIR/derivatives/split"
+RESLICE_OUTPUT_DIR="$REPO_DIR/derivatives/resliced"
 SPM_PATH="$REPO_DIR/tools/spm-25.01.02"
 REFERENCE_SCAN="$REPO_DIR/tools/3x3x3_reference_scan.nii"
 PARTICIPANTS="$REPO_DIR/data/participants.tsv"
