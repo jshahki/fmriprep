@@ -22,9 +22,9 @@ mkdir -p logs
 # Setup paths
 REPO_DIR="/scratch/st-toddwood-1/$USER/fmriprep"
 SPM_DIR="$REPO_DIR/tools/spm-25.01.02"
-DATA_DIR="$REPO_DIR/split_reslice_outputs"            # Resliced + split input dir
+DATA_DIR="$REPO_DIR/derivatives/resliced"            # Resliced + split input dir
 PARTICIPANTS="$REPO_DIR/data/participants.tsv"
-SMOOTH_OUTPUT="$REPO_DIR/smoothed"
+SMOOTH_OUTPUT="$REPO_DIR/derivatives/smoothed"
 LOG_DIR="$REPO_DIR/logs/status"
 
 mkdir -p "$LOG_DIR" "$SMOOTH_OUTPUT"
