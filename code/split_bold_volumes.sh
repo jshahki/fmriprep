@@ -20,7 +20,7 @@ module load apptainer/1.3.1
 
 REPO_DIR="/scratch/st-toddwood-1/$USER/fmriprep"
 
-FMRIPREP_IMAGE="$REPO_DIR/fmriprep-20.2.7.sif"
+FMRIPREP_IMAGE="$REPO_DIR/tools/fmriprep-20.2.7.sif"
 FMRIPREP_DIR="$REPO_DIR/derivatives/fmriprep"
 SPLIT_DIR="$REPO_DIR/derivatives/split"
 PARTICIPANTS="$REPO_DIR/data/participants.tsv"
