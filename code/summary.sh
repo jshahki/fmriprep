@@ -13,8 +13,8 @@ set -euo pipefail
 REPO_DIR="/scratch/st-toddwood-1/$USER/fmriprep"
 
 PARTICIPANTS="$REPO_DIR/data/participants.tsv"
-SMOOTH_DIR="$REPO_DIR/smoothed"
-OUTPUT_CSV="$REPO_DIR/smoothed_volume_summary.csv"
+SMOOTH_DIR="$REPO_DIR/derivatives/smoothed"
+OUTPUT_CSV="$REPO_DIR/derivatives/final_smoothed_data_summary.csv"
 
 mkdir -p "$REPO_DIR/logs"
 
