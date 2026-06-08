@@ -8,7 +8,7 @@ set -euo pipefail
 SCRATCH_DIR="/scratch/st-toddwood-1/$USER"
 REPO_DIR="$SCRATCH_DIR/fmriprep"
 
-FMRIPREP_IMAGE="$REPO_DIR/fmriprep-20.2.7.sif"
+FMRIPREP_IMAGE="$REPO_DIR/tools/fmriprep-20.2.7.sif"
 
 SPM_DIR="$REPO_DIR/tools/spm-25.01.02"
 SPM_ZIP="$REPO_DIR/tools/spm25.zip"
