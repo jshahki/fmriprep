@@ -16,9 +16,9 @@ REPO_DIR="/scratch/st-toddwood-1/$USER/fmriprep"
 BIDS_DIR="$REPO_DIR/data"
 OUTPUT_DIR="$REPO_DIR/derivatives"
 WORK_DIR="$SLURM_TMPDIR/work"
-FS_LICENSE="$REPO_DIR/freesurfer/license.txt"
+FS_LICENSE="$REPO_DIR/tools/license.txt"
 SUBJECTS_FILE="$BIDS_DIR/participants.tsv"
-FMRIPREP_IMAGE="$REPO_DIR/fmriprep-20.2.7.sif"
+FMRIPREP_IMAGE="$REPO_DIR/tools/fmriprep-20.2.7.sif"
 
 : "${SLURM_ARRAY_TASK_ID:=0}"
 
