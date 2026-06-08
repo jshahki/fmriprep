@@ -73,7 +73,7 @@ echo "Number of array jobs: $array_job_length"
 echo "Loaded subjects: ${SUBJECTS[*]}"
 
 # Submit the array job
-sbatch --array=0-$((array_job_length - 1)) ./fmriprep_per_subject.sh
+sbatch --array=0-$((array_job_length - 1)) ./code/fmriprep_per_subject.sh
 ```
 
 ## Splitting 4D Volumes into Separate 3D Volumes
@@ -95,7 +95,7 @@ ARRAY_LENGTH=$(( (N_SUBJECTS + SUB_SIZE - 1) / SUB_SIZE ))
 
 echo "Found $N_SUBJECTS subjects. Launching array with $ARRAY_LENGTH jobs."
 
-sbatch --array=0-$((ARRAY_LENGTH - 1)) split_bold_volumes.sh
+sbatch --array=0-$((ARRAY_LENGTH - 1)) ./code/split_bold_volumes.sh
 ```
 
 ## Resizing Voxels to Reference Scan
@@ -117,7 +117,7 @@ ARRAY_LENGTH=$(( (N_SUBJECTS + SUB_SIZE - 1) / SUB_SIZE ))
 
 echo "Found $N_SUBJECTS subjects. Launching array with $ARRAY_LENGTH jobs."
 
-sbatch --array=0-$((ARRAY_LENGTH - 1)) reslice_bold_volumes.sh
+sbatch --array=0-$((ARRAY_LENGTH - 1)) ./code/reslice_bold_volumes.sh
 ```
 
 ## Running SPM25 Smoothing
@@ -139,19 +139,30 @@ ARRAY_LENGTH=$(( (N_SUBJECTS + SUB_SIZE - 1) / SUB_SIZE ))
 
 echo "Found $N_SUBJECTS subjects. Launching array with $ARRAY_LENGTH jobs."
 
-sbatch --export=KERNEL="8 8 8" --array=0-$((ARRAY_LENGTH - 1)) smoothing_bold_volumes.sh
+sbatch --export=KERNEL="8 8 8" --array=0-$((ARRAY_LENGTH - 1)) ./code/smoothing_bold_volumes.sh
 ```
 
-## Saving the Smoothed Output
+## Generating a Brief Preprocessing Summary
 
-The following commands can be run on a new Terminal window to download the smoothed output, which can then be run using downstream analysis pipelines. The path to the download folder on the local desktop can be modified as needed.
+This step generates a brief summary of the number of smoothed volumes for each subject. The summary can be found in the /derivatives/smoothed/final_smoothed_data_summary.csv file, which can be opened using Excel.
+
+```sh
+cd /scratch/st-toddwood-1/$USER/fmriprep
+git pull
+
+sbatch ./code/summary.sh
+```
+
+## OPTIONAL: Saving the Smoothed Output
+
+This step can be performed if you would like to download the smoothed output to a local computer. The following commands can be run on a new Terminal window to download the smoothed output, which can then be run using downstream analysis pipelines. The path to the download folder on the local desktop can be modified as needed.
 
 For Ubuntu:
 ```sh
-rsync -avz --progress username@sockeye.arc.ubc.ca:/scratch/st-toddwood-1/username/fmriprep/smoothed/ ~/Downloads/your/location/here/
+rsync -avz --progress username@sockeye.arc.ubc.ca:/scratch/st-toddwood-1/username/fmriprep/derivatives/smoothed/ ~/Downloads/your/location/here/
 ```
 
 For Windows:
 ```sh
-scp -r -C -v username@sockeye.arc.ubc.ca:/scratch/st-toddwood-1/username/fmriprep/smoothed/ C:\Users\username\Downloads\your\location\here\
+scp -r -C -v username@sockeye.arc.ubc.ca:/scratch/st-toddwood-1/username/fmriprep/derivatives/smoothed/ C:\Users\username\Downloads\your\location\here\
 ```
