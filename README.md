@@ -21,7 +21,7 @@ git clone -b Sockeye_Version_3.0 --single-branch https://github.com/jshahki/fmri
 
 cd /scratch/st-toddwood-1/$USER/fmriprep
 
-source ./fmriprep_setup.sh
+source ./code/fmriprep_setup.sh
 ```
 
 This will set up the environment for running both fMRIPrep and SPM25 smoothing.
