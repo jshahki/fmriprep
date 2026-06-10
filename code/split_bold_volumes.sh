@@ -2,7 +2,7 @@
 #SBATCH --job-name=split_bold
 #SBATCH --account=st-toddwood-1
 #SBATCH --nodes=1
-#SBATCH --time=02:00:00
+#SBATCH --time=03:00:00
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=100G
 #SBATCH --output=logs/split_%A_%a.out
