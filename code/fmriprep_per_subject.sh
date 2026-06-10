@@ -12,7 +12,7 @@ module purge
 module load gcc/9.4.0
 module load apptainer/1.3.1
 
-REPO_DIR="/scratch/st-toddwood-1/$USER/fmriprep"
+REPO_DIR="/scratch/st-toddwood-1/$USER/START-fmri"
 BIDS_DIR="$REPO_DIR/data"
 OUTPUT_DIR="$REPO_DIR/derivatives"
 WORK_DIR="$SLURM_TMPDIR/work"
