@@ -18,7 +18,7 @@ module load apptainer/1.3.1
 # PATH SETUP
 # ==========================
 
-REPO_DIR="/scratch/st-toddwood-1/$USER/fmriprep"
+REPO_DIR="/scratch/st-toddwood-1/$USER/START-fmri"
 
 FMRIPREP_IMAGE="$REPO_DIR/tools/fmriprep-20.2.7.sif"
 FMRIPREP_DIR="$REPO_DIR/derivatives/fmriprep"
