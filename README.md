@@ -1,4 +1,4 @@
-<img src="figures/START-fmri_Logo.png" width="700">
+<img src="figures/START-fmri_Logo.png" width="620">
 
 # Welcome to START-fmri!
 
