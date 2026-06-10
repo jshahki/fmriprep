@@ -6,7 +6,7 @@ set -euo pipefail
 # Paths
 # ----------------------------
 SCRATCH_DIR="/scratch/st-toddwood-1/$USER"
-REPO_DIR="$SCRATCH_DIR/fmriprep"
+REPO_DIR="$SCRATCH_DIR/START-fmri"
 
 FMRIPREP_IMAGE="$REPO_DIR/tools/fmriprep-20.2.7.sif"
 
@@ -26,7 +26,7 @@ LOG_FILE="$LOG_DIR/setup_login_$(date +%Y%m%d_%H%M%S).log"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 echo "======================================"
-echo "fMRIPrep SETUP (LOGIN NODE)"
+echo "START-fmri SETUP (LOGIN NODE)"
 echo "User: $USER"
 echo "Host: $(hostname)"
 echo "Start: $(date)"
