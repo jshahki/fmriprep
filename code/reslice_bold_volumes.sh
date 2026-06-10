@@ -18,7 +18,7 @@ export MATLAB_PREFDIR="$SLURM_TMPDIR/matlab_prefs"
 mkdir -p "$MATLAB_PREFDIR"
 mkdir -p logs
 
-REPO_DIR="/scratch/st-toddwood-1/$USER/fmriprep"
+REPO_DIR="/scratch/st-toddwood-1/$USER/START-fmri"
 SPLIT_INPUT_DIR="$REPO_DIR/derivatives/split"
 RESLICE_OUTPUT_DIR="$REPO_DIR/derivatives/resliced"
 SPM_PATH="$REPO_DIR/tools/spm-25.01.02"
