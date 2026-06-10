@@ -1,4 +1,7 @@
-# fmriprep
+<img src="figures/START-fmri_Logo.png" width="600">
+
+# Welcome to START-fmri!
+
 This is a pipeline that combines fMRIPrep with SPM25 smoothing. The output of this pipeline can be run through downstream statistical analyses, such as fMRI-CPCA.
 
 fMRIPrep: https://fmriprep.org/en/stable/.
@@ -8,7 +11,12 @@ Statistical Parametric Mapping (SPM): https://www.fil.ion.ucl.ac.uk/spm/.
 # Steps to Run the Pipeline
 
 ## Software Setup
-Upon logging on to Sockeye (https://ondemand.arc.ubc.ca/pun/sys/dashboard/), please run the following code on the Terminal:
+
+To begin, please log onto Sockeye (https://ondemand.arc.ubc.ca/pun/sys/dashboard/) and open the Terminal window:
+
+<img src="figures/Sockeye_Default_Terminal.png" width="400">
+
+In the Terminal window above, please run the following code:
 
 ```sh
 SCRATCH_DIR="/scratch/st-toddwood-1/$USER"
