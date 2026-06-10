@@ -10,7 +10,7 @@
 
 set -euo pipefail
 
-REPO_DIR="/scratch/st-toddwood-1/$USER/fmriprep"
+REPO_DIR="/scratch/st-toddwood-1/$USER/START-fmri"
 
 PARTICIPANTS="$REPO_DIR/data/participants.tsv"
 SMOOTH_DIR="$REPO_DIR/derivatives/smoothed"
