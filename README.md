@@ -25,11 +25,11 @@ mkdir -p "$SCRATCH_DIR"
 
 cd "$SCRATCH_DIR"
 
-git clone -b Sockeye_Version-3.0 --single-branch https://github.com/jshahki/fmriprep.git
+git clone -b Sockeye_Version-3.0 --single-branch https://github.com/jshahki/START-fmri.git
 
-cd /scratch/st-toddwood-1/$USER/fmriprep
+cd /scratch/st-toddwood-1/$USER/START-fmri
 
-source ./code/fmriprep_setup.sh
+source ./code/START-fmri_setup.sh
 ```
 
 This will set up the environment for running both fMRIPrep and SPM25 smoothing.
@@ -40,7 +40,7 @@ Please ensure to keep the Terminal window open while this process completes.
 After placing your BIDS organized data into the data folder, please run the following code on Terminal:
 
 ```sh
-cd /scratch/st-toddwood-1/$USER/fmriprep
+cd /scratch/st-toddwood-1/$USER/START-fmri
 git pull
 
 # Set how many subjects per array task
@@ -89,7 +89,7 @@ sbatch --array=0-$((array_job_length - 1)) ./code/fmriprep_per_subject.sh
 This step is required for inputting the fMRI data into SPM25.
 
 ```sh
-cd /scratch/st-toddwood-1/$USER/fmriprep
+cd /scratch/st-toddwood-1/$USER/START-fmri
 git pull
 
 PARTICIPANTS_FILE="./data/participants.tsv"
@@ -111,7 +111,7 @@ sbatch --array=0-$((ARRAY_LENGTH - 1)) ./code/split_bold_volumes.sh
 This step is required for use of fMRI-CPCA downstream.
 
 ```sh
-cd /scratch/st-toddwood-1/$USER/fmriprep
+cd /scratch/st-toddwood-1/$USER/START-fmri
 git pull
 
 PARTICIPANTS_FILE="./data/participants.tsv"
@@ -133,7 +133,7 @@ sbatch --array=0-$((ARRAY_LENGTH - 1)) ./code/reslice_bold_volumes.sh
 This step is where SPM25 smoothing is performed on the fMRI data.
 
 ```sh
-cd /scratch/st-toddwood-1/$USER/fmriprep
+cd /scratch/st-toddwood-1/$USER/START-fmri
 git pull
 
 PARTICIPANTS_FILE="./data/participants.tsv"
@@ -155,7 +155,7 @@ sbatch --export=KERNEL="8 8 8" --array=0-$((ARRAY_LENGTH - 1)) ./code/smoothing_
 This step generates a brief summary of the number of smoothed volumes for each subject. The summary can be found in the /derivatives/smoothed/final_smoothed_data_summary.csv file, which can be opened using Excel.
 
 ```sh
-cd /scratch/st-toddwood-1/$USER/fmriprep
+cd /scratch/st-toddwood-1/$USER/START-fmri
 git pull
 
 sbatch ./code/summary.sh
@@ -167,10 +167,10 @@ This step can be performed if you would like to download the smoothed output to 
 
 For Ubuntu:
 ```sh
-rsync -avz --progress username@sockeye.arc.ubc.ca:/scratch/st-toddwood-1/username/fmriprep/derivatives/smoothed/ ~/Downloads/your/location/here/
+rsync -avz --progress username@sockeye.arc.ubc.ca:/scratch/st-toddwood-1/username/START-fmri/derivatives/smoothed/ ~/Downloads/your/location/here/
 ```
 
 For Windows:
 ```sh
-scp -r -C -v username@sockeye.arc.ubc.ca:/scratch/st-toddwood-1/username/fmriprep/derivatives/smoothed/ C:\Users\username\Downloads\your\location\here\
+scp -r -C -v username@sockeye.arc.ubc.ca:/scratch/st-toddwood-1/username/START-fmri/derivatives/smoothed/ C:\Users\username\Downloads\your\location\here\
 ```
