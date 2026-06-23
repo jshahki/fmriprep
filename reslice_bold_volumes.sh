@@ -10,7 +10,7 @@
 module load StdEnv/2023 matlab/2024b.1
 export MATLAB_PREFDIR="$SLURM_TMPDIR/matlab_prefs"
 
-REPO_DIR="/scratch/$USER/fmriprep"
+REPO_DIR="/scratch/$USER/START-fmri"
 SPLIT_INPUT_DIR="$REPO_DIR/split_reslice_inputs"
 RESLICE_OUTPUT_DIR="$REPO_DIR/split_reslice_outputs"
 SPM_PATH="$REPO_DIR/tools/spm-25.01.02"
