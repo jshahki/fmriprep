@@ -12,7 +12,7 @@ module load StdEnv/2023 fsl/6.0.7.7
 # ==========================
 # PATH SETUP
 # ==========================
-REPO_DIR="/scratch/$USER/fmriprep"
+REPO_DIR="/scratch/$USER/START-fmri"
 FMRIPREP_DIR="$REPO_DIR/derivatives/fmriprep"
 SPLIT_DIR="$REPO_DIR/split_reslice_inputs"
 PARTICIPANTS="$REPO_DIR/data/participants.tsv"
