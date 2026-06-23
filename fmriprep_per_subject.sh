@@ -10,7 +10,7 @@
 module load StdEnv/2023
 module load apptainer
 
-REPO_DIR="/scratch/$USER/fmriprep"
+REPO_DIR="/scratch/$USER/START-fmri"
 BIDS_DIR="$REPO_DIR/data"
 OUTPUT_DIR="$REPO_DIR/derivatives"
 WORK_DIR="$SLURM_TMPDIR/work"
