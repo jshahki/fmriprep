@@ -12,7 +12,7 @@ module load matlab/2024b.1
 export MATLAB_PREFDIR="$SLURM_TMPDIR/matlab_prefs"
 
 # Setup paths
-REPO_DIR="/scratch/$USER/fmriprep"
+REPO_DIR="/scratch/$USER/START-fmri"
 SPM_DIR="$REPO_DIR/tools/spm-25.01.02"
 DATA_DIR="$REPO_DIR/split_reslice_outputs"            # Resliced + split input dir
 PARTICIPANTS="$REPO_DIR/data/participants.tsv"
