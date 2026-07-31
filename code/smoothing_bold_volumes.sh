@@ -55,7 +55,7 @@ mapfile -t SUBDIRS < <(find "$IN_SUBJ_DIR" -mindepth 1 -maxdepth 1 -type d | sor
 if [ ${#SUBDIRS[@]} -eq 0 ]; then
   # Case 1: No subfolders — process files directly
   echo "No subfolders found in $IN_SUBJ_DIR. Processing directly..."
-  matlab -nodisplay -nosplash -prefdir "$MATLAB_PREFDIR" -r "addpath('$SPM_DIR'); addpath($CODE_DIR); smoothing_spm_batch('$IN_SUBJ_DIR', '$OUT_SUBJ_DIR', '$SUBJECT', [$KERNEL]); exit"
+  matlab -nodisplay -nosplash -prefdir "$MATLAB_PREFDIR" -r "addpath('$SPM_DIR'); addpath('$CODE_DIR'); smoothing_spm_batch('$IN_SUBJ_DIR', '$OUT_SUBJ_DIR', '$SUBJECT', [$KERNEL]); exit"
 
 else
   # Case 2: Subfolders exist — process each subfolder individually
@@ -67,7 +67,7 @@ else
     mkdir -p "$OUT_RUN_DIR"
 
     echo "Processing $SUBNAME for $SUBJECT..."
-    matlab -nodisplay -nosplash -prefdir "$MATLAB_PREFDIR" -r "addpath('$SPM_DIR'); addpath($CODE_DIR); smoothing_spm_batch('$IN_RUN_DIR', '$OUT_RUN_DIR', '${SUBJECT}_${SUBNAME}', [$KERNEL]); exit"
+    matlab -nodisplay -nosplash -prefdir "$MATLAB_PREFDIR" -r "addpath('$SPM_DIR'); addpath('$CODE_DIR'); smoothing_spm_batch('$IN_RUN_DIR', '$OUT_RUN_DIR', '${SUBJECT}_${SUBNAME}', [$KERNEL]); exit"
   done
 fi
 
