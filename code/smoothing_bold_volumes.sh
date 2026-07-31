@@ -66,7 +66,7 @@ else
     mkdir -p "$OUT_RUN_DIR"
 
     echo "Processing $SUBNAME for $SUBJECT..."
-    matlab -nodisplay -nosplash -r "addpath('$SPM_DIR'); smoothing_spm_batch('$IN_RUN_DIR', '$OUT_RUN_DIR', '${SUBJECT}_${SUBNAME}', [$KERNEL]); exit"
+    matlab -nodisplay -r "addpath('$SPM_DIR'); smoothing_spm_batch('$IN_RUN_DIR', '$OUT_RUN_DIR', '${SUBJECT}_${SUBNAME}', [$KERNEL]); exit"
   done
 fi
 
