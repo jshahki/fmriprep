@@ -26,6 +26,7 @@ DATA_DIR="$REPO_DIR/derivatives/resliced"            # Resliced + split input di
 PARTICIPANTS="$REPO_DIR/data/participants.tsv"
 SMOOTH_OUTPUT="$REPO_DIR/derivatives/smoothed"
 LOG_DIR="$REPO_DIR/logs/status"
+CODE_DIR="$REPO_DIR/code"
 
 mkdir -p "$LOG_DIR" "$SMOOTH_OUTPUT"
 
@@ -66,7 +67,7 @@ else
     mkdir -p "$OUT_RUN_DIR"
 
     echo "Processing $SUBNAME for $SUBJECT..."
-    matlab -nodisplay -r "addpath('$SPM_DIR'); smoothing_spm_batch('$IN_RUN_DIR', '$OUT_RUN_DIR', '${SUBJECT}_${SUBNAME}', [$KERNEL]); exit"
+    matlab -nodisplay -nosplash -r "addpath('$SPM_DIR'); addpath($CODE_DIR); smoothing_spm_batch('$IN_RUN_DIR', '$OUT_RUN_DIR', '${SUBJECT}_${SUBNAME}', [$KERNEL]); exit"
   done
 fi
 
