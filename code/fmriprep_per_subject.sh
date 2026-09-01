@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=fmriprep
-#SBATCH --time=12:00:00
+#SBATCH --time=15:00:00
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=120G
