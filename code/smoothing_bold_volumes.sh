@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=smoothing
-#SBATCH --time=03:00:00
+#SBATCH --time=15:00:00
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=100G
