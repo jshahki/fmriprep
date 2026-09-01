@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --job-name=START-fmri_setup
-#SBATCH --time=02:00:00
+#SBATCH --time=06:00:00
 #SBATCH --cpus-per-task=4
 #SBATCH --mem-per-cpu=10000
 #SBATCH --account=def-woodward
